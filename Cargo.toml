@@ -1,0 +1,12 @@
+[package]
+name = "hey_listen"
+version = "0.1.0"
+license = "ISC"
+keywords = ["event", "dispatcher", "listener"]
+description = "An event-dispatcher for Structs, Enums and other types."
+documentation = "https://docs.rs/hey_listen"
+repository = "https://github.com/lakelezz/hey_listen.git"
+authors = ["Lakelezz <lakelezz@protonmail.ch>"]
+
+[dependencies]
+parking_lot = "^0.5"
