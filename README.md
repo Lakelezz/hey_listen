@@ -57,5 +57,5 @@ extern crate parking_lot;
 
 [ci-badge]: https://travis-ci.org/Lakelezz/hey_listen.svg?branch=master
 [ci]: https://travis-ci.org/Lakelezz/hey_listen
-[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.1.0
+[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.1.1
 [docs]: https://docs.rs/hey_listen
