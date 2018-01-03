@@ -44,7 +44,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hey_listen = "0.1"
+hey_listen = "0.1.2"
 parking_lot = "^0.5"
 ```
 
