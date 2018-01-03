@@ -1,6 +1,6 @@
 [package]
 name = "hey_listen"
-version = "0.1.1"
+version = "0.1.2"
 license = "ISC"
 keywords = ["event", "dispatcher", "listener", "emitter"]
 description = "An event-dispatcher for Structs, Enums and other types."
