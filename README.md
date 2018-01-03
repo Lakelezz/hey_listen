@@ -1,6 +1,6 @@
 [![ci-badge][]][ci] [![docs-badge][]][docs]
 
-# Hey_listen
+# Hey! Listen!
 
 Hey_listen is an event-dispatcher for Structs, Enums and other types.
 
@@ -57,5 +57,5 @@ extern crate parking_lot;
 
 [ci-badge]: https://travis-ci.org/Lakelezz/hey_listen.svg?branch=master
 [ci]: https://travis-ci.org/Lakelezz/hey_listen
-[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.1.1
+[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.1.2
 [docs]: https://docs.rs/hey_listen
