@@ -1,4 +1,4 @@
-//! hey_listen is an event dispatcher for types.
+//! Hey_listen is an event dispatcher for Structs, enums and other types.
 //!
 //! # Usage
 //! Add this to your `Cargo.toml`:
