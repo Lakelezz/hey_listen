@@ -24,16 +24,16 @@ impl Listener<Events> for TestListener {
 }
 
 /// **Intended test-behaviour**: Listeners with different priority-level
-/// shall be dispatched in order based on their level - the higher the
-/// earlier.
+/// shall be dispatched in order based on their level, here using `u32`,
+/// the lower the earlier.
 ///
-/// **Test**: We will register six listeners, two per priority-level (in this example, `u32` from 1 to 3).
+/// **Test**: We will register six listeners, two per priority-level (here from 1 to 3).
 /// Every listener owns a reference to a record-book and will insert their name upon receiving
 /// an event.
 /// Hence dispatching mentioned event-type shall result in a vector with our listener's name
 /// ordered by their priority-level.
 #[test]
-fn order_test() {
+fn listeners_dispatch_in_correct_order() {
     let names_record = Arc::new(Mutex::new(Vec::new()));
 
     let listener_c = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
@@ -58,10 +58,10 @@ fn order_test() {
 
     let names_record = names_record.try_lock().unwrap();
 
-    assert_eq!(names_record[0], "3");
-    assert_eq!(names_record[1], "3");
+    assert_eq!(names_record[0], "1");
+    assert_eq!(names_record[1], "1");
     assert_eq!(names_record[2], "2");
     assert_eq!(names_record[3], "2");
-    assert_eq!(names_record[4], "1");
-    assert_eq!(names_record[5], "1");
+    assert_eq!(names_record[4], "3");
+    assert_eq!(names_record[5], "3");
 }
