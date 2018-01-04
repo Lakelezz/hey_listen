@@ -175,7 +175,7 @@ impl<T> EventDispatcher<T>
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
 
-            for listener in listener_collection.iter()  {
+            for listener in listener_collection.iter() {
 
                 if let Some(listener_rc) = listener.upgrade() {
                     let mut listener = listener_rc.lock();
@@ -213,11 +213,11 @@ pub struct PriorityEventDispatcher<P, T>
 unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + 'static> Send for PriorityEventDispatcher<P, T> {}
 
 impl<P, T> PriorityEventDispatcher<P, T>
-    where P: Ord,
+    where P: Ord + Clone,
         T: PartialEq + Eq + Hash + Clone + Send + 'static {
-    pub fn new() -> EventDispatcher<T> {
-        EventDispatcher {
-            events: ListenerMap::new()
+    pub fn new() -> PriorityEventDispatcher<P, T> {
+        PriorityEventDispatcher {
+            events: PriorityListenerMap::new()
         }
     }
 
@@ -290,11 +290,14 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
     pub fn add_listener<D: Listener<T> + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>, priority: P) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
+
             if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
                 priority_level_collection.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
 
                 return;
             }
+            prioritised_listener_collection.insert(priority.clone(), vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))));
+            return;
         }
 
         let mut b_tree_map = BTreeMap::new();
