@@ -36,22 +36,22 @@ impl Listener<Events> for TestListener {
 fn listeners_dispatch_in_correct_order() {
     let names_record = Arc::new(Mutex::new(Vec::new()));
 
-    let listener_c = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
-    let listener_a = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
-    let listener_b = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
-    let listener_aa = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
-    let listener_cc = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
-    let listener_bb = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
+    let first_receiver_a = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
+    let last_receiver_a = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
+    let second_receiver_a = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
+    let last_receiver_b = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
+    let first_receiver_b = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
+    let second_receiver_b = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
 
     let mut dispatcher = PriorityEventDispatcher::<u32, Events>::new();
 
     {
-        dispatcher.add_listener(Events::Event, &listener_a, 3);
-        dispatcher.add_listener(Events::Event, &listener_aa, 3);
-        dispatcher.add_listener(Events::Event, &listener_b, 2);
-        dispatcher.add_listener(Events::Event, &listener_c, 1);
-        dispatcher.add_listener(Events::Event, &listener_cc, 1);
-        dispatcher.add_listener(Events::Event, &listener_bb, 2);
+        dispatcher.add_listener(Events::Event, &last_receiver_a, 3);
+        dispatcher.add_listener(Events::Event, &last_receiver_b, 3);
+        dispatcher.add_listener(Events::Event, &second_receiver_a, 2);
+        dispatcher.add_listener(Events::Event, &first_receiver_a, 1);
+        dispatcher.add_listener(Events::Event, &first_receiver_b, 1);
+        dispatcher.add_listener(Events::Event, &second_receiver_b, 2);
     }
 
     dispatcher.dispatch_event(&Events::Event);
