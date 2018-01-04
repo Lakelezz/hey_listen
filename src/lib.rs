@@ -1,4 +1,4 @@
-//! Hey_listen is an event dispatcher for Structs, enums and other types.
+//! `hey_listen` is an event dispatcher for Structs, enums and other types.
 //!
 //! # Usage
 //! Add this to your `Cargo.toml`:
@@ -200,8 +200,12 @@ impl<T> EventDispatcher<T>
 /// [`EventListener`], this structure utilises one [`BTreeMap`] per
 /// event-type to order listeners by a given priority-level.
 ///
+/// **Note**: Consider implementing your own [`Ord`]-trait, if you
+/// want a different kind of order.
+///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
+/// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
 /// [`EventListener`]: struct.EventDispatcher.html
 #[derive(Default)]
 pub struct PriorityEventDispatcher<P, T>
@@ -221,7 +225,8 @@ impl<P, T> PriorityEventDispatcher<P, T>
         }
     }
 
-    /// Adds a [`Listener`] to listen for an `event_identifier`.
+    /// Adds a [`Listener`] to listen for an `event_identifier`, considering
+    /// a given `priority` implementing the [`Ord`]-trait, to sort dispatch-order.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
     /// **Note**: If your `Enum` owns fields you need to consider implementing
@@ -238,7 +243,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// use std::sync::Arc;
     ///
     /// use hey_listen::Listener;
-    /// use hey_listen::EventDispatcher;
+    /// use hey_listen::PriorityEventDispatcher;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum EventEnum {
@@ -253,9 +258,9 @@ impl<P, T> PriorityEventDispatcher<P, T>
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<EventEnum> = EventDispatcher::new();
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> = PriorityEventDispatcher::new();
     ///
-    ///     dispatcher.add_listener(EventEnum::EventVariant, &listener);
+    ///     dispatcher.add_listener(EventEnum::EventVariant, &listener, 1);
     /// }
     /// ```
     ///
@@ -284,10 +289,12 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// impl Eq for Test {}
     /// ```
     ///
+    /// [`EventDispatcher`]: struct.EventDispatcher.html
     /// [`Listener`]: trait.Listener.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
+    /// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
     pub fn add_listener<D: Listener<T> + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>, priority: P) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
 
