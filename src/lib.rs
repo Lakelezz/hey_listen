@@ -208,7 +208,7 @@ impl<T> EventDispatcher<T>
     /// extern crate hey_listen;
     /// extern crate parking_lot;
     ///
-    /// use hey_listen::closures::EventDispatcher;
+    /// use hey_listen::EventDispatcher;
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
@@ -403,6 +403,23 @@ impl<P, T> PriorityEventDispatcher<P, T>
 
         let mut b_tree_map = BTreeMap::new();
         b_tree_map.insert(priority, FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
+        self.events.insert(event_identifier, b_tree_map);
+    }
+
+    pub fn add_fn<D: Listener<T> + 'static>(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), Error>>, priority: P) {
+        if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
+
+            if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
+                priority_level_collection.fns.push(function);
+
+                return;
+            }
+            prioritised_listener_collection.insert(priority.clone(), FnsAndTraits::new_with_fns(vec!(function)));
+            return;
+        }
+
+        let mut b_tree_map = BTreeMap::new();
+        b_tree_map.insert(priority, FnsAndTraits::new_with_fns(vec!(function)));
         self.events.insert(event_identifier, b_tree_map);
     }
 
