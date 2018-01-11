@@ -3,7 +3,7 @@
 # Hey! Listen!
 
 Hey_listen is an event-dispatcher for Closures, Structs, Enums and other types.
-On another note, `hey_listen` supports prioritised/ordered dispatching and aims to add
+On another note, hey_listen supports prioritised/ordered dispatching and aims to add
 parallel dispatching as well!
 
 Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTING.md) for further guidance.
