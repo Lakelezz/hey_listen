@@ -1,7 +1,7 @@
 extern crate hey_listen;
 extern crate parking_lot;
 
-use hey_listen::closures::EventDispatcher;
+use hey_listen::EventDispatcher;
 use std::sync::Arc;
 use parking_lot::Mutex;
 
@@ -28,10 +28,11 @@ fn test_closure() {
     let closure = Box::new(move |event: &Events| {
         let listener = weak_listener_ref.upgrade().unwrap();
         listener.lock().test_method(&event);
+        Ok(())
     });
 
     let mut dispatcher: EventDispatcher<Events> = EventDispatcher::new();
-    dispatcher.add_listener(Events::EventA, closure);
+    dispatcher.add_fn(Events::EventA, closure);
     dispatcher.dispatch_event(&Events::EventA);
 
     let listener = listener.lock();
