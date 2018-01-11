@@ -49,6 +49,9 @@
 //!
 //!     dispatcher.add_listener(EventEnum::EventVariant, &listener);
 //! }
+//!
+//! Check out Hey_Listen's documentation for further instructions on e.g. prioritised dispatching or
+//! using closures.
 //! ```
 extern crate parking_lot;
 
