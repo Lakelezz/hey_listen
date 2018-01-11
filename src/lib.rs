@@ -56,8 +56,36 @@ use std::collections::{HashMap, BTreeMap};
 use std::marker::Send;
 use parking_lot::Mutex;
 
-type ListenerMap<T> = HashMap<T, Vec<Weak<Mutex<Listener<T>>>>>;
-type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, Vec<Weak<Mutex<Listener<T>>>>>>;
+type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
+type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
+
+pub enum Error {
+    StoppedListening,
+}
+
+/// Yields closures and trait-objects.
+struct FnsAndTraits<T>
+    where T: PartialEq + Eq + Hash + Clone + Send + 'static {
+    traits: Vec<Weak<Mutex<Listener<T>>>>,
+    fns: Vec<Box<Fn(&T) -> Result<(), Error>>>,
+}
+
+impl<T> FnsAndTraits<T>
+    where T: PartialEq + Eq + Hash + Clone + Send + 'static {
+    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T>>>>) -> Self {
+        FnsAndTraits {
+            traits: trait_objects,
+            fns: vec!(),
+        }
+    }
+
+    fn new_with_fns(fns: Vec<Box<Fn(&T) -> Result<(), Error>>>) -> Self {
+        FnsAndTraits {
+            traits: vec!(),
+            fns: fns,
+        }
+    }
+}
 
 /// Every event-receiver needs to implement this trait
 /// in order to receive dispatched events.
@@ -158,24 +186,87 @@ impl<T> EventDispatcher<T>
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
     pub fn add_listener<D: Listener<T> + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
-            listener_collection.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
+            listener_collection.traits.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
 
             return;
         }
 
-        self.events.insert(event_identifier, vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))));
+        self.events.insert(event_identifier, FnsAndTraits::new_with_traits((vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))))));
+    }
+
+    /// Adds a [`fn`] to listen for an `event_identifier`.
+    /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
+    ///
+    /// **Note**: If your `Enum` owns fields you need to consider implementing
+    /// the [`Hash`]- and [`PartialEq`]-trait if you want to ignore fields.
+    ///
+    /// # Examples
+    ///
+    /// Adding a [`fn`] to the dispatcher:
+    ///
+    /// ```rust
+    /// extern crate hey_listen;
+    /// extern crate parking_lot;
+    ///
+    /// use hey_listen::closures::EventDispatcher;
+    /// use std::sync::Arc;
+    /// use parking_lot::Mutex;
+    ///
+    /// #[derive(Clone, Eq, Hash, PartialEq)]
+    /// enum Events {
+    ///     EventA,
+    /// }
+    ///
+    /// struct TestListener {
+    ///     used_method: bool,
+    /// }
+    ///
+    /// impl TestListener {
+    ///     fn test_method(&mut self, _event: &Events) {
+    ///         self.used_method = true;
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let listener = Arc::new(Mutex::new(TestListener { used_method: false }));
+    ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
+    ///
+    ///     let closure = Box::new(move |event: &Events| {
+    ///         let listener = weak_listener_ref.upgrade().unwrap();
+    ///         listener.lock().test_method(&event);
+    ///     });
+    /// }
+    /// ```
+    ///
+    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
+    /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
+    /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
+    /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
+    pub fn add_fn(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), Error>>) {
+        if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
+            listener_collection.fns.push(function);
+
+            return;
+        }
+
+        self.events.insert(event_identifier, FnsAndTraits::new_with_fns(vec!(function)));
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`
-    /// will be called via their implemented [`on_event`]-method.
+    /// will be called via their implemented [`on_event`]-method
+    /// and all [`fn`]s in a [`Box`] that return a result with
+    /// [`Error`] as `Err`.
     ///
     /// [`Listener`]: trait.Listener.html
     /// [`on_event`]: trait.Listener.html#tymethod.on_event
+    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
+    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+    /// [`Error`]: enum.Error.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
 
-            for listener in listener_collection.iter() {
+            for listener in listener_collection.traits.iter() {
 
                 if let Some(listener_rc) = listener.upgrade() {
                     let mut listener = listener_rc.lock();
@@ -185,15 +276,18 @@ impl<T> EventDispatcher<T>
                 }
             }
 
+            listener_collection.fns.retain(|callback| {
+                callback(event_identifier).is_ok()
+            });
+
             if found_invalid_weak_ref {
-                listener_collection.retain(|listener| {
+                listener_collection.traits.retain(|listener| {
                     Weak::clone(listener).upgrade().is_some()
                 });
             }
         }
     }
 }
-
 
 /// Owns a map of all listened event-variants and
 /// [`Weak`]-references to their listeners but opposed to
@@ -299,16 +393,16 @@ impl<P, T> PriorityEventDispatcher<P, T>
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
 
             if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
-                priority_level_collection.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
+                priority_level_collection.traits.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
 
                 return;
             }
-            prioritised_listener_collection.insert(priority.clone(), vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))));
+            prioritised_listener_collection.insert(priority.clone(), FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
             return;
         }
 
         let mut b_tree_map = BTreeMap::new();
-        b_tree_map.insert(priority, vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))));
+        b_tree_map.insert(priority, FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
         self.events.insert(event_identifier, b_tree_map);
     }
 
@@ -325,7 +419,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
             for (_, listener_collection) in prioritised_listener_collection.iter_mut() {
                 let mut found_invalid_weak_ref = false;
 
-                for listener in listener_collection.iter() {
+                for listener in listener_collection.traits.iter() {
 
                     if let Some(listener_rc) = listener.upgrade() {
                         let mut listener = listener_rc.lock();
@@ -336,7 +430,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
                 }
 
                 if found_invalid_weak_ref {
-                    listener_collection.retain(|listener| {
+                    listener_collection.traits.retain(|listener| {
                         Weak::clone(listener).upgrade().is_some()
                     });
                 }
@@ -344,4 +438,3 @@ impl<P, T> PriorityEventDispatcher<P, T>
         }
     }
 }
-
