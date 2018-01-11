@@ -1,4 +1,5 @@
 //! `hey_listen` is an event dispatcher for Structs, enums and other types.
+//! It currently supports closures, traits and enabling prioritised dispatching.
 //!
 //! # Usage
 //! Add this to your `Cargo.toml`:
