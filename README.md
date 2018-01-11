@@ -3,6 +3,7 @@
 # Hey! Listen!
 
 Hey_listen is an event-dispatcher for Structs, Enums and other types.
+It currently supports closures, traits and enabling prioritised dispatching.
 
 # Example
 
