@@ -223,18 +223,18 @@ impl<T> EventDispatcher<T>
     ///     EventType,
     /// }
     ///
-    /// struct Listener {
+    /// struct EventListener {
     ///     used_method: bool,
     /// }
     ///
-    /// impl Listener {
+    /// impl EventListener {
     ///     fn test_method(&mut self, _event: &Event) {
     ///         self.used_method = true;
     ///     }
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(Listener { used_method: false }));
+    ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
@@ -441,18 +441,18 @@ impl<P, T> PriorityEventDispatcher<P, T>
     ///     EventType,
     /// }
     ///
-    /// struct Listener {
+    /// struct EventListener {
     ///     used_method: bool,
     /// }
     ///
-    /// impl Listener {
+    /// impl EventListener {
     ///     fn test_method(&mut self, _event: &Event) {
     ///         self.used_method = true;
     ///     }
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(Listener { used_method: false }));
+    ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///

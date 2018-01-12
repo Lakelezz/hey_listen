@@ -7,17 +7,17 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
-enum Events {
-    Event,
+enum Event {
+    EventType,
 }
 
-struct TestListener {
+struct EventListener {
     name: String,
     name_record: Arc<Mutex<Vec<String>>>,
 }
 
-impl Listener<Events> for TestListener {
-    fn on_event(&mut self, _event: &Events) {
+impl Listener<Event> for EventListener {
+    fn on_event(&mut self, _event: &Event) {
         let mut name_record = self.name_record.try_lock().unwrap();
         name_record.push(self.name.clone());
     }
@@ -36,25 +36,25 @@ impl Listener<Events> for TestListener {
 fn listeners_dispatch_in_correct_order() {
     let names_record = Arc::new(Mutex::new(Vec::new()));
 
-    let first_receiver_a = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
-    let last_receiver_a = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
-    let second_receiver_a = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
-    let last_receiver_b = Arc::new(Mutex::new(TestListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
-    let first_receiver_b = Arc::new(Mutex::new(TestListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
-    let second_receiver_b = Arc::new(Mutex::new(TestListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
+    let first_receiver_a = Arc::new(Mutex::new(EventListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
+    let last_receiver_a = Arc::new(Mutex::new(EventListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
+    let second_receiver_a = Arc::new(Mutex::new(EventListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
+    let last_receiver_b = Arc::new(Mutex::new(EventListener { name: "3".to_string(), name_record: Arc::clone(&names_record) }));
+    let first_receiver_b = Arc::new(Mutex::new(EventListener { name: "1".to_string(), name_record: Arc::clone(&names_record) }));
+    let second_receiver_b = Arc::new(Mutex::new(EventListener { name: "2".to_string(), name_record: Arc::clone(&names_record) }));
 
-    let mut dispatcher = PriorityEventDispatcher::<u32, Events>::new();
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::new();
 
     {
-        dispatcher.add_listener(Events::Event, &last_receiver_a, 3);
-        dispatcher.add_listener(Events::Event, &last_receiver_b, 3);
-        dispatcher.add_listener(Events::Event, &second_receiver_a, 2);
-        dispatcher.add_listener(Events::Event, &first_receiver_a, 1);
-        dispatcher.add_listener(Events::Event, &first_receiver_b, 1);
-        dispatcher.add_listener(Events::Event, &second_receiver_b, 2);
+        dispatcher.add_listener(Event::EventType, &last_receiver_a, 3);
+        dispatcher.add_listener(Event::EventType, &last_receiver_b, 3);
+        dispatcher.add_listener(Event::EventType, &second_receiver_a, 2);
+        dispatcher.add_listener(Event::EventType, &first_receiver_a, 1);
+        dispatcher.add_listener(Event::EventType, &first_receiver_b, 1);
+        dispatcher.add_listener(Event::EventType, &second_receiver_b, 2);
     }
 
-    dispatcher.dispatch_event(&Events::Event);
+    dispatcher.dispatch_event(&Event::EventType);
 
     let names_record = names_record.try_lock().unwrap();
 

@@ -10,11 +10,11 @@ enum Event {
     EventType,
 }
 
-struct Listener {
+struct EventListener {
     used_method: bool,
 }
 
-impl Listener {
+impl EventListener {
     fn test_method(&mut self, _event: &Event) {
         self.used_method = true;
     }
@@ -22,7 +22,7 @@ impl Listener {
 
 #[test]
 fn test_closure() {
-    let listener = Arc::new(Mutex::new(Listener { used_method: false }));
+    let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
 
     let closure = Box::new(move |event: &Event| {
