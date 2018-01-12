@@ -31,23 +31,23 @@
 //! use parking_lot::Mutex;
 //!
 //! #[derive(Clone, Eq, Hash, PartialEq)]
-//! enum EventEnum {
-//!     EventVariant,
+//! enum Event {
+//!     EventType,
 //! }
 //!
 //! struct ListenerStruct {}
 //!
-//! impl Listener<EventEnum> for ListenerStruct {
-//!     fn on_event(&mut self, event: &EventEnum) {
+//! impl Listener<Event> for ListenerStruct {
+//!     fn on_event(&mut self, event: &Event) {
 //!         println!("I'm listening! :)");
 //!     }
 //! }
 //!
 //! fn main() {
 //!     let listener = Arc::new(Mutex::new(ListenerStruct {}));
-//!     let mut dispatcher: EventDispatcher<EventEnum> = EventDispatcher::new();
+//!     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
 //!
-//!     dispatcher.add_listener(EventEnum::EventVariant, &listener);
+//!     dispatcher.add_listener(Event::EventType, &listener);
 //! }
 //!
 //! ```
@@ -142,21 +142,21 @@ impl<T> EventDispatcher<T>
     /// use hey_listen::EventDispatcher;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
-    /// enum EventEnum {
-    ///     EventVariant,
+    /// enum Event {
+    ///     EventType,
     /// }
     ///
     /// struct ListenerStruct {}
     ///
-    /// impl Listener<EventEnum> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &EventEnum) {}
+    /// impl Listener<Event> for ListenerStruct {
+    ///     fn on_event(&mut self, event: &Event) {}
     /// }
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<EventEnum> = EventDispatcher::new();
+    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
     ///
-    ///     dispatcher.add_listener(EventEnum::EventVariant, &listener);
+    ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
     /// ```
     ///
@@ -168,21 +168,21 @@ impl<T> EventDispatcher<T>
     /// use std::mem::discriminant;
     ///
     /// #[derive(Clone)]
-    /// enum Test {
+    /// enum Event {
     ///     TestVariant(i32),
     /// }
     ///
-    /// impl Hash for Test {
+    /// impl Hash for Event {
     ///     fn hash<H: Hasher>(&self, _state: &mut H) {}
     /// }
     ///
-    /// impl PartialEq for Test {
-    ///     fn eq(&self, other: &Test) -> bool {
+    /// impl PartialEq for Event {
+    ///     fn eq(&self, other: &Event) -> bool {
     ///         discriminant(self) == discriminant(other)
     ///     }
     /// }
     ///
-    /// impl Eq for Test {}
+    /// impl Eq for Event {}
     /// ```
     ///
     /// [`Listener`]: trait.Listener.html
@@ -219,26 +219,26 @@ impl<T> EventDispatcher<T>
     /// use parking_lot::Mutex;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
-    /// enum Events {
-    ///     EventA,
+    /// enum Event {
+    ///     EventType,
     /// }
     ///
-    /// struct TestListener {
+    /// struct Listener {
     ///     used_method: bool,
     /// }
     ///
-    /// impl TestListener {
-    ///     fn test_method(&mut self, _event: &Events) {
+    /// impl Listener {
+    ///     fn test_method(&mut self, _event: &Event) {
     ///         self.used_method = true;
     ///     }
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(TestListener { used_method: false }));
-    ///     let mut dispatcher: EventDispatcher<Events> = EventDispatcher::new();
+    ///     let listener = Arc::new(Mutex::new(Listener { used_method: false }));
+    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Events| -> Result<(), Error> {
+    ///     let closure = Box::new(move |event: &Event| -> Result<(), Error> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
     ///             Ok(())
@@ -247,7 +247,7 @@ impl<T> EventDispatcher<T>
     ///         }
     ///     });
     ///
-    ///     dispatcher.add_fn(Events::EventA, closure);
+    ///     dispatcher.add_fn(Event::EventType, closure);
     /// }
     /// ```
     ///
@@ -281,8 +281,8 @@ impl<T> EventDispatcher<T>
 
             for listener in listener_collection.traits.iter() {
 
-                if let Some(listener_rc) = listener.upgrade() {
-                    let mut listener = listener_rc.lock();
+                if let Some(listener_arc) = listener.upgrade() {
+                    let mut listener = listener_arc.lock();
                     listener.on_event(event_identifier);
                 } else {
                     found_invalid_weak_ref = true;
@@ -353,21 +353,21 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// use hey_listen::PriorityEventDispatcher;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
-    /// enum EventEnum {
-    ///     EventVariant,
+    /// enum Event {
+    ///     EventType,
     /// }
     ///
     /// struct ListenerStruct {}
     ///
-    /// impl Listener<EventEnum> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &EventEnum) {}
+    /// impl Listener<Event> for ListenerStruct {
+    ///     fn on_event(&mut self, event: &Event) {}
     /// }
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> = PriorityEventDispatcher::new();
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::new();
     ///
-    ///     dispatcher.add_listener(EventEnum::EventVariant, &listener, 1);
+    ///     dispatcher.add_listener(Event::EventType, &listener, 1);
     /// }
     /// ```
     ///
@@ -379,21 +379,21 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// use std::mem::discriminant;
     ///
     /// #[derive(Clone)]
-    /// enum Test {
+    /// enum Event {
     ///     TestVariant(i32),
     /// }
     ///
-    /// impl Hash for Test {
+    /// impl Hash for Event {
     ///     fn hash<H: Hasher>(&self, _state: &mut H) {}
     /// }
     ///
-    /// impl PartialEq for Test {
-    ///     fn eq(&self, other: &Test) -> bool {
+    /// impl PartialEq for Event {
+    ///     fn eq(&self, other: &Event) -> bool {
     ///         discriminant(self) == discriminant(other)
     ///     }
     /// }
     ///
-    /// impl Eq for Test {}
+    /// impl Eq for Event {}
     /// ```
     ///
     /// [`EventDispatcher`]: struct.EventDispatcher.html
@@ -437,26 +437,26 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// use parking_lot::Mutex;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
-    /// enum Events {
-    ///     EventA,
+    /// enum Event {
+    ///     EventType,
     /// }
     ///
-    /// struct TestListener {
+    /// struct Listener {
     ///     used_method: bool,
     /// }
     ///
-    /// impl TestListener {
-    ///     fn test_method(&mut self, _event: &Events) {
+    /// impl Listener {
+    ///     fn test_method(&mut self, _event: &Event) {
     ///         self.used_method = true;
     ///     }
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(TestListener { used_method: false }));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, Events> = PriorityEventDispatcher::new();
+    ///     let listener = Arc::new(Mutex::new(Listener { used_method: false }));
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Events| -> Result<(), Error> {
+    ///     let closure = Box::new(move |event: &Event| -> Result<(), Error> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
     ///             Ok(())
@@ -465,7 +465,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
     ///         }
     ///     });
     ///
-    ///     dispatcher.add_fn(Events::EventA, closure, 1);
+    ///     dispatcher.add_fn(Event::EventType, closure, 1);
     /// }
     /// ```
     ///
@@ -505,8 +505,8 @@ impl<P, T> PriorityEventDispatcher<P, T>
 
                 for listener in listener_collection.traits.iter() {
 
-                    if let Some(listener_rc) = listener.upgrade() {
-                        let mut listener = listener_rc.lock();
+                    if let Some(listener_arc) = listener.upgrade() {
+                        let mut listener = listener_arc.lock();
                         listener.on_event(event_identifier);
                     } else {
                         found_invalid_weak_ref = true;
