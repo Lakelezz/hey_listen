@@ -50,9 +50,9 @@
 //!     dispatcher.add_listener(EventEnum::EventVariant, &listener);
 //! }
 //!
+//! ```
 //! Check out Hey_Listen's documentation for further instructions on e.g. prioritised dispatching or
 //! using closures.
-//! ```
 extern crate parking_lot;
 
 use std::sync::{Weak, Arc};
@@ -214,6 +214,7 @@ impl<T> EventDispatcher<T>
     /// extern crate parking_lot;
     ///
     /// use hey_listen::EventDispatcher;
+    /// use hey_listen::Error;
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
@@ -234,12 +235,19 @@ impl<T> EventDispatcher<T>
     ///
     /// fn main() {
     ///     let listener = Arc::new(Mutex::new(TestListener { used_method: false }));
+    ///     let mut dispatcher: EventDispatcher<Events> = EventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Events| {
-    ///         let listener = weak_listener_ref.upgrade().unwrap();
-    ///         listener.lock().test_method(&event);
+    ///     let closure = Box::new(move |event: &Events| -> Result<(), Error> {
+    ///         if let Some(listener) = weak_listener_ref.upgrade() {
+    ///             listener.lock().test_method(&event);
+    ///             Ok(())
+    ///         } else {
+    ///             Err(Error::StoppedListening)
+    ///         }
     ///     });
+    ///
+    ///     dispatcher.add_fn(Events::EventA, closure);
     /// }
     /// ```
     ///
@@ -411,7 +419,61 @@ impl<P, T> PriorityEventDispatcher<P, T>
         self.events.insert(event_identifier, b_tree_map);
     }
 
-    pub fn add_fn<D: Listener<T> + 'static>(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), Error>>, priority: P) {
+    /// Adds a [`fn`] to listen for an `event_identifier`, considering
+    /// a given `priority` implementing the [`Ord`]-trait, to sort dispatch-order.
+    /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
+    ///
+    /// # Examples
+    ///
+    /// Adding a [`fn`] to the dispatcher:
+    ///
+    /// ```rust
+    /// extern crate hey_listen;
+    /// extern crate parking_lot;
+    ///
+    /// use hey_listen::PriorityEventDispatcher;
+    /// use hey_listen::Error;
+    /// use std::sync::Arc;
+    /// use parking_lot::Mutex;
+    ///
+    /// #[derive(Clone, Eq, Hash, PartialEq)]
+    /// enum Events {
+    ///     EventA,
+    /// }
+    ///
+    /// struct TestListener {
+    ///     used_method: bool,
+    /// }
+    ///
+    /// impl TestListener {
+    ///     fn test_method(&mut self, _event: &Events) {
+    ///         self.used_method = true;
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let listener = Arc::new(Mutex::new(TestListener { used_method: false }));
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, Events> = PriorityEventDispatcher::new();
+    ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
+    ///
+    ///     let closure = Box::new(move |event: &Events| -> Result<(), Error> {
+    ///         if let Some(listener) = weak_listener_ref.upgrade() {
+    ///             listener.lock().test_method(&event);
+    ///             Ok(())
+    ///         } else {
+    ///             Err(Error::StoppedListening)
+    ///         }
+    ///     });
+    ///
+    ///     dispatcher.add_fn(Events::EventA, closure, 1);
+    /// }
+    /// ```
+    ///
+    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
+    /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
+    /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
+    /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
+    pub fn add_fn(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), Error>>, priority: P) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
 
             if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
