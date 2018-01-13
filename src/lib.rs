@@ -51,8 +51,6 @@
 //! }
 //!
 //! ```
-//! Check out Hey_Listen's documentation for further instructions on e.g. prioritised dispatching or
-//! using closures.
 extern crate parking_lot;
 
 use std::sync::{Weak, Arc};
@@ -64,6 +62,13 @@ use parking_lot::Mutex;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
 
+/// Returning `StoppedListening` will result
+/// in a removal of an event-receiver.
+///
+/// **Note**: Currently only available for
+/// [`Fn`]s.
+///
+/// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 pub enum Error {
     StoppedListening,
 }
@@ -97,15 +102,16 @@ impl<T> FnsAndTraits<T>
 /// `T` being the type you use for events, e.g. an `Enum`.
 pub trait Listener<T>
     where T: PartialEq + Eq + Hash + Clone + Send + 'static {
-    /// This function will be dispatched once a listened
+    /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     fn on_event(&mut self, event: &T);
 }
 
-/// Owns a map of all listened event-variants and
-/// [`Weak`]-references to their listeners.
+/// Owns a map of all listened event-variants,
+/// [`Weak`]-references to their listeners and [`Fn`]s.
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
+/// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 #[derive(Default)]
 pub struct EventDispatcher<T>
     where T: PartialEq + Eq + Hash + Clone + Send + 'static {
@@ -199,17 +205,15 @@ impl<T> EventDispatcher<T>
         self.events.insert(event_identifier, FnsAndTraits::new_with_traits((vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))))));
     }
 
-    /// Adds a [`fn`] to listen for an `event_identifier`.
+    /// Adds a [`Fn`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
-    /// [`Error`] as `Err`. Returning `StoppedListening` will
-    /// remove the callback from the event-dispatcher.
     ///
     /// **Note**: If your `Enum` owns fields you need to consider implementing
     /// the [`Hash`]- and [`PartialEq`]-trait if you want to ignore fields.
     ///
     /// # Examples
     ///
-    /// Adding a [`fn`] to the dispatcher:
+    /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
     /// extern crate hey_listen;
@@ -253,7 +257,7 @@ impl<T> EventDispatcher<T>
     /// }
     /// ```
     ///
-    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
+    /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
@@ -268,16 +272,17 @@ impl<T> EventDispatcher<T>
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`
-    /// will be called via their implemented [`on_event`]-method
-    /// and all [`fn`]s in a [`Box`] that return a result with
-    /// [`Error`] as `Err`. Returning `StoppedListening` will
-    /// remove the callback from the event-dispatcher.
+    /// will be called via their implemented [`on_event`]-method.
+    /// [`Fn`]s returning [`Result`] with `Ok(())` will be retained
+    /// and `Err(Error::StoppedListening)` will cause them to
+    /// be removed from the event-dispatcher.
     ///
     /// [`Listener`]: trait.Listener.html
     /// [`on_event`]: trait.Listener.html#tymethod.on_event
-    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
-    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
     /// [`Error`]: enum.Error.html
+    /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
+    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+    /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
@@ -305,9 +310,9 @@ impl<T> EventDispatcher<T>
     }
 }
 
-/// Owns a map of all listened event-variants and
-/// [`Weak`]-references to their listeners but opposed to
-/// [`EventListener`], this structure utilises one [`BTreeMap`] per
+/// Owns a map of all listened event-variants,
+/// [`Weak`]-references to their listeners and [`Fn`]s.
+/// Opposed to [`EventListener`], this structure utilises one [`BTreeMap`] per
 /// event-type to order listeners by a given priority-level.
 ///
 /// **Note**: Consider implementing your own [`Ord`]-trait, if you
@@ -317,6 +322,7 @@ impl<T> EventDispatcher<T>
 /// [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
 /// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
 /// [`EventListener`]: struct.EventDispatcher.html
+/// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 #[derive(Default)]
 pub struct PriorityEventDispatcher<P, T>
     where P: Ord,
@@ -422,13 +428,13 @@ impl<P, T> PriorityEventDispatcher<P, T>
         self.events.insert(event_identifier, b_tree_map);
     }
 
-    /// Adds a [`fn`] to listen for an `event_identifier`, considering
-    /// a given `priority` implementing the [`Ord`]-trait, to sort dispatch-order.
+    /// Adds a [`Fn`] to listen for an `event_identifier`, considering
+    /// a given `priority` implementing the [`Ord`]-trait in order to sort dispatch-order.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
     /// # Examples
     ///
-    /// Adding a [`fn`] to the dispatcher:
+    /// Adding an [`Fn`] to the dispatcher:
     ///
     /// ```rust
     /// extern crate hey_listen;
@@ -472,7 +478,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// }
     /// ```
     ///
-    /// [`fn`]: https://doc.rust-lang.org/std/primitive.fn.html
+    /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
@@ -495,11 +501,16 @@ impl<P, T> PriorityEventDispatcher<P, T>
 
     /// All [`Listener`]s listening to a passed `event_identifier`
     /// will be called via their implemented [`on_event`]-method.
+    /// [`Fn`]s returning [`Result`] with `Ok(())` will be retained
+    /// and `Err(Error::StoppedListening)` will cause them to
+    /// be removed from the event-dispatcher.
     ///
     /// **Notice**: [`Listener`]s will called ordered by their priority-level.
     ///
     /// [`Listener`]: trait.Listener.html
     /// [`on_event`]: trait.Listener.html#tymethod.on_event
+    /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
+    /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(event_identifier) {
 
