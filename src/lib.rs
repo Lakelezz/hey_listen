@@ -201,6 +201,8 @@ impl<T> EventDispatcher<T>
 
     /// Adds a [`fn`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
+    /// [`Error`] as `Err`. Returning `StoppedListening` will
+    /// remove the callback from the event-dispatcher.
     ///
     /// **Note**: If your `Enum` owns fields you need to consider implementing
     /// the [`Hash`]- and [`PartialEq`]-trait if you want to ignore fields.
@@ -268,7 +270,8 @@ impl<T> EventDispatcher<T>
     /// All [`Listener`]s listening to a passed `event_identifier`
     /// will be called via their implemented [`on_event`]-method
     /// and all [`fn`]s in a [`Box`] that return a result with
-    /// [`Error`] as `Err`.
+    /// [`Error`] as `Err`. Returning `StoppedListening` will
+    /// remove the callback from the event-dispatcher.
     ///
     /// [`Listener`]: trait.Listener.html
     /// [`on_event`]: trait.Listener.html#tymethod.on_event
