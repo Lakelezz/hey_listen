@@ -7,7 +7,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! hey_listen = "0.1.2"
+//! hey_listen = "0.2.0"
 //! parking_lot = "^0.5"
 //! ```
 //!

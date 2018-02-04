@@ -48,7 +48,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hey_listen = "0.1.2"
+hey_listen = "0.2.0"
 parking_lot = "^0.5"
 ```
 
@@ -61,5 +61,5 @@ extern crate parking_lot;
 
 [ci-badge]: https://travis-ci.org/Lakelezz/hey_listen.svg?branch=master
 [ci]: https://travis-ci.org/Lakelezz/hey_listen
-[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.1.2
+[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.2.0
 [docs]: https://docs.rs/hey_listen
