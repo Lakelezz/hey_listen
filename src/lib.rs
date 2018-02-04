@@ -1,5 +1,5 @@
-//! Hey_listen is an event-dispatcher for Closures, Structs, Enums and other types.
-//! On another note, hey_listen supports prioritised/ordered dispatching and aims to add
+//! `Hey_listen` is an event-dispatcher for Closures, Structs, Enums and other types.
+//! On another note, `hey_listen` supports prioritised/ordered dispatching and aims to add
 //! parallel dispatching as well!
 //!
 //! # Usage
@@ -61,6 +61,7 @@ use parking_lot::Mutex;
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
+type EventFunction<T> = Vec<Box<Fn(&T) -> Result<(), Error>>>;
 
 /// Returning `StoppedListening` will result
 /// in a removal of an event-receiver.
@@ -77,7 +78,7 @@ pub enum Error {
 struct FnsAndTraits<T>
     where T: PartialEq + Eq + Hash + Clone + Send + 'static {
     traits: Vec<Weak<Mutex<Listener<T>>>>,
-    fns: Vec<Box<Fn(&T) -> Result<(), Error>>>,
+    fns: EventFunction<T>,
 }
 
 impl<T> FnsAndTraits<T>
@@ -89,7 +90,7 @@ impl<T> FnsAndTraits<T>
         }
     }
 
-    fn new_with_fns(fns: Vec<Box<Fn(&T) -> Result<(), Error>>>) -> Self {
+    fn new_with_fns(fns: EventFunction<T>) -> Self {
         FnsAndTraits {
             traits: vec!(),
             fns: fns,
@@ -122,11 +123,6 @@ unsafe impl<T: PartialEq + Eq + Hash + Clone + Send + 'static> Send for EventDis
 
 impl<T> EventDispatcher<T>
     where T: PartialEq + Eq + Hash + Clone + Send + 'static {
-    pub fn new() -> EventDispatcher<T> {
-        EventDispatcher {
-            events: ListenerMap::new()
-        }
-    }
 
     /// Adds a [`Listener`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
@@ -287,7 +283,7 @@ impl<T> EventDispatcher<T>
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
 
-            for listener in listener_collection.traits.iter() {
+            for listener in (&listener_collection.traits).iter() {
 
                 if let Some(listener_arc) = listener.upgrade() {
                     let mut listener = listener_arc.lock();
@@ -335,11 +331,6 @@ unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + 'static> Send for 
 impl<P, T> PriorityEventDispatcher<P, T>
     where P: Ord + Clone,
         T: PartialEq + Eq + Hash + Clone + Send + 'static {
-    pub fn new() -> PriorityEventDispatcher<P, T> {
-        PriorityEventDispatcher {
-            events: PriorityListenerMap::new()
-        }
-    }
 
     /// Adds a [`Listener`] to listen for an `event_identifier`, considering
     /// a given `priority` implementing the [`Ord`]-trait, to sort dispatch-order.
@@ -517,7 +508,7 @@ impl<P, T> PriorityEventDispatcher<P, T>
             for (_, listener_collection) in prioritised_listener_collection.iter_mut() {
                 let mut found_invalid_weak_ref = false;
 
-                for listener in listener_collection.traits.iter() {
+                for listener in (&listener_collection.traits).iter() {
 
                     if let Some(listener_arc) = listener.upgrade() {
                         let mut listener = listener_arc.lock();
