@@ -202,7 +202,7 @@ impl<T> EventDispatcher<T>
             return;
         }
 
-        self.events.insert(event_identifier, FnsAndTraits::new_with_traits((vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>))))));
+        self.events.insert(event_identifier, FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
     }
 
     /// Adds a [`Fn`] to listen for an `event_identifier`.
