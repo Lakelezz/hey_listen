@@ -65,7 +65,7 @@ type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
 type EventFunction<T> = Vec<Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
-type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Result<(), ParallelDispatcherRequest> + Send + Sync>>;
+type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a [`Listener`] to its `sync` event-dispatcher.
 ///
@@ -816,7 +816,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Arc<Fn(&T) -> Result<(), ParallelDispatcherRequest> + Send + Sync>,
+        function: Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
@@ -844,6 +844,8 @@ where
     /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
+            let mut fns_to_delete = Mutex::new(Vec::new());
+
             join(
                 || {
                     listener_collection.traits.par_iter().for_each(|listener| {
@@ -857,9 +859,24 @@ where
                     listener_collection
                         .fns
                         .par_iter()
-                        .map(|callback| callback(event_identifier).is_ok())
+                        .enumerate()
+                        .for_each(|(index, callback)| {
+                            if let Some(instruction) = callback(event_identifier) {
+                                match instruction {
+                                    ParallelDispatcherRequest::StopListening => {
+                                        fns_to_delete.lock().push(index);
+                                    }
+                                }
+                            } else {
+                                ()
+                            }
+                        });
                 },
             );
+
+            fns_to_delete.lock().iter().for_each(|index| {
+                listener_collection.fns.swap_remove(*index);
+            });
         }
     }
 }
