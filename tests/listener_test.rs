@@ -28,7 +28,7 @@ impl Listener<Event> for EventListener {
 }
 
 enum EnumListener {
-    SomeVariant(bool)
+    SomeVariant(bool),
 }
 
 impl Listener<Event> for EnumListener {
@@ -58,7 +58,7 @@ fn dispatch_enum_variant_with_field() {
     dispatcher.dispatch_event(&Event::EventA);
 
     let enum_field = match *listener.lock().deref() {
-        EnumListener::SomeVariant(x) => x
+        EnumListener::SomeVariant(x) => x,
     };
 
     assert!(enum_field);
@@ -71,7 +71,10 @@ fn dispatch_enum_variant_with_field() {
 /// dispatch all two variants.
 #[test]
 fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() {
-    let listener = Arc::new(Mutex::new(EventListener { received_event_a: false, received_event_b: false }));
+    let listener = Arc::new(Mutex::new(EventListener {
+        received_event_a: false,
+        received_event_b: false,
+    }));
     let mut dispatcher = EventDispatcher::<Event>::new();
 
     {
@@ -98,7 +101,10 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
 /// dispatch both variants.
 #[test]
 fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
-    let listener = Arc::new(Mutex::new(EventListener { received_event_a: false, received_event_b: false }));
+    let listener = Arc::new(Mutex::new(EventListener {
+        received_event_a: false,
+        received_event_b: false,
+    }));
 
     let mut dispatcher = EventDispatcher::<Event>::new();
 
@@ -122,7 +128,7 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
 
 #[test]
 fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
-    use std::hash::{Hasher, Hash};
+    use std::hash::{Hash, Hasher};
     use std::mem::discriminant;
 
     #[derive(Clone, Eq)]
@@ -155,7 +161,10 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
         }
     }
 
-    let listener = Arc::new(Mutex::new(EventListener { received_event_a: false, received_event_b: false }));
+    let listener = Arc::new(Mutex::new(EventListener {
+        received_event_a: false,
+        received_event_b: false,
+    }));
     let mut dispatcher = EventDispatcher::<Event>::new();
 
     {

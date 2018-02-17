@@ -54,9 +54,9 @@
 extern crate parking_lot;
 extern crate rayon;
 
-use std::sync::{Weak, Arc};
+use std::sync::{Arc, Weak};
 use std::hash::Hash;
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 use parking_lot::Mutex;
 use rayon::join;
 use rayon::prelude::*;
@@ -82,7 +82,7 @@ type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Result<(), SyncDispatcherReque
 pub enum SyncDispatcherRequest {
     StopListening,
     StopPropagation,
-    StopListeningAndPropagation
+    StopListeningAndPropagation,
 }
 
 /// An `enum` returning a request from a [`Listener`] to its `async` event-dispatcher.
@@ -101,23 +101,27 @@ pub enum ParallelDispatcherRequest {
 
 /// Yields closures and trait-objects.
 struct FnsAndTraits<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     traits: Vec<Weak<Mutex<Listener<T>>>>,
     fns: EventFunction<T>,
 }
 
 impl<T> FnsAndTraits<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T>>>>) -> Self {
         FnsAndTraits {
             traits: trait_objects,
-            fns: vec!(),
+            fns: vec![],
         }
     }
 
     fn new_with_fns(fns: EventFunction<T>) -> Self {
         FnsAndTraits {
-            traits: vec!(),
+            traits: vec![],
             fns: fns,
         }
     }
@@ -125,23 +129,29 @@ impl<T> FnsAndTraits<T>
 
 /// Yields `Send` and `Sync` closures and trait-objects.
 struct ParallelFnsAndTraits<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     traits: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
     fns: ParallelEventFunction<T>,
 }
 
 impl<T> ParallelFnsAndTraits<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
-    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>) -> Self {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    fn new_with_traits(
+        trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+    ) -> Self {
         ParallelFnsAndTraits {
             traits: trait_objects,
-            fns: vec!(),
+            fns: vec![],
         }
     }
 
     fn new_with_fns(fns: ParallelEventFunction<T>) -> Self {
         ParallelFnsAndTraits {
-            traits: vec!(),
+            traits: vec![],
             fns: fns,
         }
     }
@@ -151,7 +161,9 @@ impl<T> ParallelFnsAndTraits<T>
 /// in order to receive dispatched events.
 /// `T` being the type you use for events, e.g. an `Enum`.
 pub trait Listener<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     fn on_event(&mut self, event: &T);
@@ -163,15 +175,19 @@ pub trait Listener<T>
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 pub struct EventDispatcher<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
-    events: ListenerMap<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    events: ListenerMap<T>,
 }
 
 impl<T> EventDispatcher<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     pub fn new() -> EventDispatcher<T> {
         EventDispatcher {
-            events: ListenerMap::new()
+            events: ListenerMap::new(),
         }
     }
 
@@ -242,14 +258,25 @@ impl<T> EventDispatcher<T>
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_listener<D: Listener<T> + Sync + Sync + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>) {
+    pub fn add_listener<D: Listener<T> + Sync + Sync + 'static>(
+        &mut self,
+        event_identifier: T,
+        listener: &Arc<Mutex<D>>,
+    ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
-            listener_collection.traits.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
+            listener_collection.traits.push(Arc::downgrade(
+                &(Arc::clone(listener) as Arc<Mutex<Listener<T>>>),
+            ));
 
             return;
         }
 
-        self.events.insert(event_identifier, FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
+        self.events.insert(
+            event_identifier,
+            FnsAndTraits::new_with_traits(vec![
+                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+            ]),
+        );
     }
 
     /// Adds a [`Fn`] to listen for an `event_identifier`.
@@ -308,14 +335,19 @@ impl<T> EventDispatcher<T>
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_fn(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>) {
+    pub fn add_fn(
+        &mut self,
+        event_identifier: T,
+        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+    ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
 
             return;
         }
 
-        self.events.insert(event_identifier, FnsAndTraits::new_with_fns(vec!(function)));
+        self.events
+            .insert(event_identifier, FnsAndTraits::new_with_fns(vec![function]));
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`
@@ -335,7 +367,6 @@ impl<T> EventDispatcher<T>
             let mut found_invalid_weak_ref = false;
 
             for listener in (&listener_collection.traits).iter() {
-
                 if let Some(listener_arc) = listener.upgrade() {
                     let mut listener = listener_arc.lock();
                     listener.on_event(event_identifier);
@@ -344,14 +375,14 @@ impl<T> EventDispatcher<T>
                 }
             }
 
-            listener_collection.fns.retain(|callback| {
-                callback(event_identifier).is_ok()
-            });
+            listener_collection
+                .fns
+                .retain(|callback| callback(event_identifier).is_ok());
 
             if found_invalid_weak_ref {
-                listener_collection.traits.retain(|listener| {
-                    Weak::clone(listener).upgrade().is_some()
-                });
+                listener_collection
+                    .traits
+                    .retain(|listener| Weak::clone(listener).upgrade().is_some());
             }
         }
     }
@@ -372,19 +403,25 @@ impl<T> EventDispatcher<T>
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 #[derive(Default)]
 pub struct PriorityEventDispatcher<P, T>
-    where P: Ord,
-        T: PartialEq + Eq + Hash + Clone + Send + Sync +'static {
-    events: PriorityListenerMap<P, T>
+where
+    P: Ord,
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    events: PriorityListenerMap<P, T>,
 }
 
-unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static> Send for PriorityEventDispatcher<P, T> {}
+unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static> Send
+    for PriorityEventDispatcher<P, T> {
+}
 
 impl<P, T> PriorityEventDispatcher<P, T>
-    where P: Ord + Clone,
-        T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    P: Ord + Clone,
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     pub fn new() -> PriorityEventDispatcher<P, T> {
         PriorityEventDispatcher {
-            events: PriorityListenerMap::new()
+            events: PriorityListenerMap::new(),
         }
     }
 
@@ -458,20 +495,38 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
     /// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
-    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>, priority: P) {
+    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(
+        &mut self,
+        event_identifier: T,
+        listener: &Arc<Mutex<D>>,
+        priority: P,
+    ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
-
-            if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
-                priority_level_collection.traits.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)));
+            if let Some(priority_level_collection) =
+                prioritised_listener_collection.get_mut(&priority)
+            {
+                priority_level_collection.traits.push(Arc::downgrade(
+                    &(Arc::clone(listener) as Arc<Mutex<Listener<T>>>),
+                ));
 
                 return;
             }
-            prioritised_listener_collection.insert(priority.clone(), FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
+            prioritised_listener_collection.insert(
+                priority.clone(),
+                FnsAndTraits::new_with_traits(vec![
+                    Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+                ]),
+            );
             return;
         }
 
         let mut b_tree_map = BTreeMap::new();
-        b_tree_map.insert(priority, FnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)))));
+        b_tree_map.insert(
+            priority,
+            FnsAndTraits::new_with_traits(vec![
+                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+            ]),
+        );
         self.events.insert(event_identifier, b_tree_map);
     }
 
@@ -529,20 +584,27 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_fn(&mut self, event_identifier: T, function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>, priority: P) {
+    pub fn add_fn(
+        &mut self,
+        event_identifier: T,
+        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+        priority: P,
+    ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
-
-            if let Some(priority_level_collection) = prioritised_listener_collection.get_mut(&priority) {
+            if let Some(priority_level_collection) =
+                prioritised_listener_collection.get_mut(&priority)
+            {
                 priority_level_collection.fns.push(function);
 
                 return;
             }
-            prioritised_listener_collection.insert(priority.clone(), FnsAndTraits::new_with_fns(vec!(function)));
+            prioritised_listener_collection
+                .insert(priority.clone(), FnsAndTraits::new_with_fns(vec![function]));
             return;
         }
 
         let mut b_tree_map = BTreeMap::new();
-        b_tree_map.insert(priority, FnsAndTraits::new_with_fns(vec!(function)));
+        b_tree_map.insert(priority, FnsAndTraits::new_with_fns(vec![function]));
         self.events.insert(event_identifier, b_tree_map);
     }
 
@@ -560,12 +622,10 @@ impl<P, T> PriorityEventDispatcher<P, T>
     /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(event_identifier) {
-
             for (_, listener_collection) in prioritised_listener_collection.iter_mut() {
                 let mut found_invalid_weak_ref = false;
 
                 for listener in (&listener_collection.traits).iter() {
-
                     if let Some(listener_arc) = listener.upgrade() {
                         let mut listener = listener_arc.lock();
                         listener.on_event(event_identifier);
@@ -575,9 +635,9 @@ impl<P, T> PriorityEventDispatcher<P, T>
                 }
 
                 if found_invalid_weak_ref {
-                    listener_collection.traits.retain(|listener| {
-                        Weak::clone(listener).upgrade().is_some()
-                    });
+                    listener_collection
+                        .traits
+                        .retain(|listener| Weak::clone(listener).upgrade().is_some());
                 }
             }
         }
@@ -591,15 +651,19 @@ impl<P, T> PriorityEventDispatcher<P, T>
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
 #[derive(Default)]
 pub struct ParallelEventDispatcher<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
-    events: ParallelListenerMap<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    events: ParallelListenerMap<T>,
 }
 
 impl<T> ParallelEventDispatcher<T>
-    where T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     pub fn new() -> ParallelEventDispatcher<T> {
         ParallelEventDispatcher {
-            events: ParallelListenerMap::new()
+            events: ParallelListenerMap::new(),
         }
     }
 
@@ -670,14 +734,27 @@ impl<T> ParallelEventDispatcher<T>
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(&mut self, event_identifier: T, listener: &Arc<Mutex<D>>) {
+    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(
+        &mut self,
+        event_identifier: T,
+        listener: &Arc<Mutex<D>>,
+    ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
-            listener_collection.traits.push(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)));
+            listener_collection.traits.push(Arc::downgrade(
+                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+            ));
 
             return;
         }
 
-        self.events.insert(event_identifier, ParallelFnsAndTraits::new_with_traits(vec!(Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)))));
+        self.events.insert(
+            event_identifier,
+            ParallelFnsAndTraits::new_with_traits(vec![
+                Arc::downgrade(
+                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                ),
+            ]),
+        );
     }
 
     /// Adds a [`Fn`] to listen for an `event_identifier`.
@@ -736,14 +813,21 @@ impl<T> ParallelEventDispatcher<T>
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_fn(&mut self, event_identifier: T, function: Arc<Fn(&T) -> Result<(), SyncDispatcherRequest> + Send + Sync>) {
+    pub fn add_fn(
+        &mut self,
+        event_identifier: T,
+        function: Arc<Fn(&T) -> Result<(), SyncDispatcherRequest> + Send + Sync>,
+    ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
 
             return;
         }
 
-        self.events.insert(event_identifier, ParallelFnsAndTraits::new_with_fns(vec!(function)));
+        self.events.insert(
+            event_identifier,
+            ParallelFnsAndTraits::new_with_fns(vec![function]),
+        );
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`
@@ -760,15 +844,22 @@ impl<T> ParallelEventDispatcher<T>
     /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
-
-            join(|| listener_collection.traits.par_iter().for_each(|listener| {
-                if let Some(listener_arc) = listener.upgrade() {
-                    let mut listener = listener_arc.lock();
-                    listener.on_event(event_identifier);
-                }
-            }), || listener_collection.fns.par_iter().map(|callback| {
-                callback(event_identifier).is_ok()
-            }));
+            join(
+                || {
+                    listener_collection.traits.par_iter().for_each(|listener| {
+                        if let Some(listener_arc) = listener.upgrade() {
+                            let mut listener = listener_arc.lock();
+                            listener.on_event(event_identifier);
+                        }
+                    })
+                },
+                || {
+                    listener_collection
+                        .fns
+                        .par_iter()
+                        .map(|callback| callback(event_identifier).is_ok())
+                },
+            );
         }
     }
 }
