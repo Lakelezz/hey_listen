@@ -132,7 +132,7 @@ struct ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+    traits: Vec<Weak<Mutex<ParallelListener<T> + Send + Sync + 'static>>>,
     fns: ParallelEventFunction<T>,
 }
 
@@ -141,7 +141,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     fn new_with_traits(
-        trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+        trait_objects: Vec<Weak<Mutex<ParallelListener<T> + Send + Sync + 'static>>>,
     ) -> Self {
         ParallelFnsAndTraits {
             traits: trait_objects,
@@ -167,6 +167,18 @@ where
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     fn on_event(&mut self, event: &T);
+}
+
+/// Every event-receiver needs to implement this trait
+/// in order to receive dispatched events.
+/// `T` being the type you use for events, e.g. an `Enum`.
+pub trait ParallelListener<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    /// This function will be called once a listened
+    /// event-type `T` has been dispatched.
+    fn on_event(&mut self, event: &T) -> Option<ParallelDispatcherRequest>;
 }
 
 /// Owns a map of all listened event-variants,
@@ -734,14 +746,14 @@ where
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(
+    pub fn add_listener<D: ParallelListener<T> + Send + Sync + 'static>(
         &mut self,
         event_identifier: T,
         listener: &Arc<Mutex<D>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<ParallelListener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -751,7 +763,8 @@ where
             event_identifier,
             ParallelFnsAndTraits::new_with_traits(vec![
                 Arc::downgrade(
-                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                    &(Arc::clone(listener)
+                        as Arc<Mutex<ParallelListener<T> + Send + Sync + 'static>>),
                 ),
             ]),
         );
@@ -844,16 +857,28 @@ where
     /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
-            let mut fns_to_delete = Mutex::new(Vec::new());
+            let mut fns_to_remove = Mutex::new(Vec::new());
+            let mut traits_to_remove = Mutex::new(Vec::new());
 
             join(
                 || {
-                    listener_collection.traits.par_iter().for_each(|listener| {
-                        if let Some(listener_arc) = listener.upgrade() {
-                            let mut listener = listener_arc.lock();
-                            listener.on_event(event_identifier);
-                        }
-                    })
+                    listener_collection.traits.par_iter().enumerate().for_each(
+                        |(index, listener)| {
+                            if let Some(listener_arc) = listener.upgrade() {
+                                let mut listener = listener_arc.lock();
+
+                                if let Some(instruction) = listener.on_event(event_identifier) {
+                                    match instruction {
+                                        ParallelDispatcherRequest::StopListening => {
+                                            traits_to_remove.lock().push(index)
+                                        }
+                                    }
+                                }
+                            } else {
+                                traits_to_remove.lock().push(index)
+                            }
+                        },
+                    )
                 },
                 || {
                     listener_collection
@@ -864,7 +889,7 @@ where
                             if let Some(instruction) = callback(event_identifier) {
                                 match instruction {
                                     ParallelDispatcherRequest::StopListening => {
-                                        fns_to_delete.lock().push(index);
+                                        fns_to_remove.lock().push(index);
                                     }
                                 }
                             } else {
@@ -874,8 +899,12 @@ where
                 },
             );
 
-            fns_to_delete.lock().iter().for_each(|index| {
+            fns_to_remove.lock().iter().for_each(|index| {
                 listener_collection.fns.swap_remove(*index);
+            });
+
+            traits_to_remove.lock().iter().for_each(|index| {
+                listener_collection.traits.swap_remove(*index);
             });
         }
     }
