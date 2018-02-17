@@ -13,6 +13,8 @@ Issues display development-plans or required brainstorming, feel free to ask, su
 
 - Commits shall be as small as possible, compile and pass all tests.
 
+- Make sure your code is formatted as `rustfmt` would format it, unless `rustfmt` goes _crazy_ and dismembers everything :' )
+
 - If you fixed a bug, add a test for that bug. Unit-Tests belong inside same file's `mod` named `tests`, integrational tests belong inside the `tests`-folder.
 
 - Last but not least, make sure your planned pull request merges cleanly, if it does not, rebase your changes.
