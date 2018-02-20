@@ -10,4 +10,5 @@ repository = "https://github.com/lakelezz/hey_listen.git"
 authors = ["Lakelezz <lakelezz@protonmail.ch>"]
 
 [dependencies]
+rayon = "^1.0"
 parking_lot = "^0.5"
