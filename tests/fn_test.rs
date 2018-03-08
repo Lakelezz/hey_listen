@@ -1,3 +1,4 @@
+extern crate failure;
 extern crate hey_listen;
 extern crate parking_lot;
 

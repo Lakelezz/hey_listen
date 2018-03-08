@@ -2,12 +2,16 @@
 name = "hey_listen"
 version = "0.2.0"
 license = "ISC"
-keywords = ["event", "dispatcher", "listener", "emitter"]
-description = "An event-dispatcher for Structs, Enums and other types."
+keywords = ["event", "dispatcher", "listener", "emitter", "parallel"]
+categories = ["concurrency"]
+description = "An event-dispatcher-collection offering sync, parallel and prioritised solutions!"
 readme = "README.md"
 documentation = "https://docs.rs/hey_listen"
 repository = "https://github.com/lakelezz/hey_listen.git"
 authors = ["Lakelezz <lakelezz@protonmail.ch>"]
 
 [dependencies]
-parking_lot = "^0.5"
+rayon = "^1.0"
+parking_lot = "^0.5.4"
+failure = "^0.1.1"
+failure_derive = "^0.1.1"
