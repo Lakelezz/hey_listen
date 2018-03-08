@@ -676,6 +676,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     events: ParallelListenerMap<T>,
+    thread_pool: Option<ThreadPool>,
 }
 
 impl<T> ParallelEventDispatcher<T>
@@ -685,6 +686,7 @@ where
     pub fn new() -> ParallelEventDispatcher<T> {
         ParallelEventDispatcher {
             events: ParallelListenerMap::new(),
+            thread_pool: None,
         }
     }
 
@@ -697,15 +699,16 @@ where
     ///
     /// # Examples
     ///
-    /// Adding a [`Listener`] to the dispatcher:
+    /// Adding a [`ParallelListener`] to the dispatcher:
     ///
     /// ```rust
     /// extern crate hey_listen;
     /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::Listener;
-    /// use hey_listen::EventDispatcher;
+    /// use hey_listen::ParallelListener;
+    /// use hey_listen::ParallelEventDispatcher;
+    /// use hey_listen::ParallelDispatcherRequest;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -714,13 +717,13 @@ where
     ///
     /// struct ListenerStruct {}
     ///
-    /// impl Listener<Event> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &Event) {}
+    /// impl ParallelListener<Event> for ListenerStruct {
+    ///     fn on_event(&mut self, event: &Event) -> Option<ParallelDispatcherRequest> { None }
     /// }
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::new();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -751,7 +754,7 @@ where
     /// impl Eq for Event {}
     /// ```
     ///
-    /// [`Listener`]: trait.Listener.html
+    /// [`ParallelListener`]: trait.ParallelListener.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
@@ -782,8 +785,8 @@ where
     /// Adds a [`Fn`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
-    /// **Note**: If your `Enum` owns fields you need to consider implementing
-    /// the [`Hash`]- and [`PartialEq`]-trait if you want to ignore fields.
+    /// **Note**: If your `Enum` owns fields, you need to consider implementing
+    /// the [`Hash`]- and [`PartialEq`]-trait if you want to ignore these.
     ///
     /// # Examples
     ///
@@ -792,9 +795,12 @@ where
     /// ```rust
     /// extern crate hey_listen;
     /// extern crate parking_lot;
+    /// extern crate failure;
+    /// #[macro_use]
+    /// extern crate failure_derive;
     ///
-    /// use hey_listen::EventDispatcher;
-    /// use hey_listen::Error;
+    /// use hey_listen::ParallelEventDispatcher;
+    /// use hey_listen::ParallelDispatcherRequest;
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
@@ -815,15 +821,15 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), Error> {
+    ///     let closure = Arc::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
-    ///             Ok(())
+    ///             None
     ///         } else {
-    ///             Err(Error::StoppedListening)
+    ///             Some(ParallelDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
@@ -852,61 +858,59 @@ where
         );
     }
 
-    /// All [`Listener`]s listening to a passed `event_identifier`
-    /// will be called via their implemented [`on_event`]-method.
-    /// [`Fn`]s returning [`Result`] with `Ok(())` will be retained
-    /// and `Err(Error::StoppedListening)` will cause them to
-    /// be removed from the event-dispatcher.
+    /// Immediately after calling this method,
+    /// the dispatcher will attempt to build a thread-pool with
+    /// `num` amount of threads.
+    /// If internals fail to build, [`BuildError`] is returned.
     ///
-    /// [`Listener`]: trait.Listener.html
-    /// [`on_event`]: trait.Listener.html#tymethod.on_event
-    /// [`Error`]: enum.Error.html
+    /// **Note**: Failing to build the thread-pool will result
+    /// in keeping the prior thread-pool, if one has been built before.
+    /// If none has been built, none will be used; being default.
+    ///
+    /// [`BuildError`]: enum.BuildError.html
+    pub fn num_threads(&mut self, num: usize) -> Result<(), BuildError> {
+        match rayon::ThreadPoolBuilder::new().num_threads(num).build() {
+            Ok(pool) => {
+                self.thread_pool = Some(pool);
+                Ok(())
+            }
+            Err(error) => Err(BuildError::NumThreads(error.description().to_string())),
+        }
+    }
+
+    /// All [`ParallelListener`]s listening to a passed `event_identifier`
+    /// will be called via their implemented [`on_event`]-method.
+    /// [`Fn`]s returning an [`Option`] wrapping [`ParallelDispatcherRequest`]
+    /// with `ParallelDispatcherRequest::StopListening` will cause them
+    /// to be removed from the event-dispatcher.
+    ///
+    /// [`ParallelListener`]: trait.ParallelListener.html
+    /// [`on_event`]: trait.ParallelListener.html#tymethod.on_event
+    /// [`ParallelDispatcherRequest`]: enum.ParallelDispatcherRequest.html
     /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
-    /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
+    /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut fns_to_remove = Mutex::new(Vec::new());
             let mut traits_to_remove = Mutex::new(Vec::new());
 
-            join(
-                || {
-                    listener_collection.traits.par_iter().enumerate().for_each(
-                        |(index, listener)| {
-                            if let Some(listener_arc) = listener.upgrade() {
-                                let mut listener = listener_arc.lock();
-
-                                if let Some(instruction) = listener.on_event(event_identifier) {
-                                    match instruction {
-                                        ParallelDispatcherRequest::StopListening => {
-                                            traits_to_remove.lock().push(index)
-                                        }
-                                    }
-                                }
-                            } else {
-                                traits_to_remove.lock().push(index)
-                            }
-                        },
+            if let Some(ref thread_pool) = self.thread_pool {
+                thread_pool.install(|| {
+                    ParallelEventDispatcher::joined_parallel_dispatch(
+                        listener_collection,
+                        event_identifier,
+                        &fns_to_remove,
+                        &traits_to_remove,
                     )
-                },
-                || {
-                    listener_collection
-                        .fns
-                        .par_iter()
-                        .enumerate()
-                        .for_each(|(index, callback)| {
-                            if let Some(instruction) = callback(event_identifier) {
-                                match instruction {
-                                    ParallelDispatcherRequest::StopListening => {
-                                        fns_to_remove.lock().push(index);
-                                    }
-                                }
-                            } else {
-                                ()
-                            }
-                        });
-                },
-            );
+                });
+            } else {
+                ParallelEventDispatcher::joined_parallel_dispatch(
+                    listener_collection,
+                    event_identifier,
+                    &fns_to_remove,
+                    &traits_to_remove,
+                );
+            }
 
             fns_to_remove.lock().iter().for_each(|index| {
                 listener_collection.fns.swap_remove(*index);
@@ -916,5 +920,59 @@ where
                 listener_collection.traits.swap_remove(*index);
             });
         }
+    }
+
+    /// Encapsulates `Rayon`'s joined `par_iter`-function on
+    /// `Fn`s and `ParallelListener`s.
+    ///
+    /// This enables it to be used captured inside a `ThreadPool`'s
+    /// `install`-method but also bare as is - in case no
+    /// `ThreadPool` is avail.
+    fn joined_parallel_dispatch(
+        listener_collection: &ParallelFnsAndTraits<T>,
+        event_identifier: &T,
+        fns_to_remove: &Mutex<Vec<usize>>,
+        traits_to_remove: &Mutex<Vec<usize>>,
+    ) {
+        join(
+            || {
+                listener_collection
+                    .traits
+                    .par_iter()
+                    .enumerate()
+                    .for_each(|(index, listener)| {
+                        if let Some(listener_arc) = listener.upgrade() {
+                            let mut listener = listener_arc.lock();
+
+                            if let Some(instruction) = listener.on_event(event_identifier) {
+                                match instruction {
+                                    ParallelDispatcherRequest::StopListening => {
+                                        traits_to_remove.lock().push(index)
+                                    }
+                                }
+                            }
+                        } else {
+                            traits_to_remove.lock().push(index)
+                        }
+                    })
+            },
+            || {
+                listener_collection
+                    .fns
+                    .par_iter()
+                    .enumerate()
+                    .for_each(|(index, callback)| {
+                        if let Some(instruction) = callback(event_identifier) {
+                            match instruction {
+                                ParallelDispatcherRequest::StopListening => {
+                                    fns_to_remove.lock().push(index);
+                                }
+                            }
+                        } else {
+                            ()
+                        }
+                    });
+            },
+        );
     }
 }
