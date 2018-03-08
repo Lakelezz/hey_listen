@@ -1,6 +1,5 @@
-//! `Hey_listen` is an event-dispatcher for Closures, Structs, Enums and other types.
-//! On another note, `hey_listen` supports prioritised/ordered dispatching and aims to add
-//! parallel dispatching as well!
+//! `Hey_listen` is a collection of event-dispatchers suiting all needs: sync, parallel and prioritised.
+//! Dispatching to Closures, Enums, Structs and every other type supporting `trait`-implementation.
 //!
 //! # Usage
 //! Add this to your `Cargo.toml`:
