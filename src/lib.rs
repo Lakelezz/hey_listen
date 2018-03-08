@@ -558,7 +558,7 @@ where
     /// extern crate parking_lot;
     ///
     /// use hey_listen::PriorityEventDispatcher;
-    /// use hey_listen::Error;
+    /// use hey_listen::SyncDispatcherRequest;
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
