@@ -18,7 +18,7 @@
 //! ```
 //!
 //! # Example
-//! Here is a quick example on how to use the event-dispatcher:
+//! Here is a quick example on how to use the sync event-dispatcher:
 //!
 //! ```rust
 //! extern crate hey_listen;
