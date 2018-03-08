@@ -131,7 +131,7 @@ where
 }
 
 /// Yields `Send` and `Sync` closures and trait-objects.
-struct ParallelFnsAndTraits<T>
+pub struct ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
@@ -155,7 +155,7 @@ where
     fn new_with_fns(fns: ParallelEventFunction<T>) -> Self {
         ParallelFnsAndTraits {
             traits: vec![],
-            fns: fns,
+            fns,
         }
     }
 }
@@ -309,7 +309,7 @@ where
     /// extern crate parking_lot;
     ///
     /// use hey_listen::EventDispatcher;
-    /// use hey_listen::Error;
+    /// use hey_listen::SyncDispatcherRequest;
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
