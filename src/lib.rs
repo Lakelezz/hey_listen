@@ -125,7 +125,7 @@ where
     fn new_with_fns(fns: EventFunction<T>) -> Self {
         FnsAndTraits {
             traits: vec![],
-            fns: fns,
+            fns,
         }
     }
 }
