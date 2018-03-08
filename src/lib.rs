@@ -50,14 +50,18 @@
 //! }
 //!
 //! ```
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate parking_lot;
 extern crate rayon;
 
+use std::error::Error;
 use std::sync::{Arc, Weak};
 use std::hash::Hash;
 use std::collections::{BTreeMap, HashMap};
 use parking_lot::Mutex;
-use rayon::join;
+use rayon::{join, ThreadPool};
 use rayon::prelude::*;
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
