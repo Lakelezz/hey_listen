@@ -333,12 +333,12 @@ where
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), Error> {
+    ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
     ///             Ok(())
     ///         } else {
-    ///             Err(Error::StoppedListening)
+    ///             Err(SyncDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
@@ -368,7 +368,7 @@ where
     /// All [`Listener`]s listening to a passed `event_identifier`
     /// will be called via their implemented [`on_event`]-method.
     /// [`Fn`]s returning [`Result`] with `Ok(())` will be retained
-    /// and `Err(Error::StoppedListening)` will cause them to
+    /// and `Err(SyncDispatcherRequest::StopListening)` will cause them to
     /// be removed from the event-dispatcher.
     ///
     /// [`Listener`]: trait.Listener.html
