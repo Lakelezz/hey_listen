@@ -659,6 +659,12 @@ where
     }
 }
 
+/// Errors for ThreadPool-building related failures.
+#[derive(Fail, Debug)]
+pub enum BuildError {
+    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)] NumThreads(String),
+}
+
 /// Owns a map of all listened event-variants,
 /// [`Weak`]-references to their listeners and [`Fn`]s.
 ///
@@ -682,7 +688,7 @@ where
         }
     }
 
-    /// Adds a [`Listener`] to listen for an `event_identifier`.
+    /// Adds a [`ParallelListener`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
     /// **Note**: If your `Enum` owns fields you need to consider implementing
