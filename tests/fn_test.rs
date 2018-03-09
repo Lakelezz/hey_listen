@@ -32,7 +32,7 @@ fn test_closure() {
         Ok(())
     });
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     dispatcher.add_fn(Event::EventType, closure);
     dispatcher.dispatch_event(&Event::EventType);
 

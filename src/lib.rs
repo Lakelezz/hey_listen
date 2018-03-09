@@ -196,16 +196,20 @@ where
     events: ListenerMap<T>,
 }
 
-impl<T> EventDispatcher<T>
+impl<T> Default for EventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    pub fn new() -> EventDispatcher<T> {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    fn default() -> EventDispatcher<T> {
         EventDispatcher {
             events: ListenerMap::new(),
         }
     }
+}
 
+impl<T> EventDispatcher<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     /// Adds a [`Listener`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
@@ -670,7 +674,6 @@ pub enum BuildError {
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-#[derive(Default)]
 pub struct ParallelEventDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
@@ -679,17 +682,21 @@ where
     thread_pool: Option<ThreadPool>,
 }
 
-impl<T> ParallelEventDispatcher<T>
+impl<T> Default for ParallelEventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    pub fn new() -> ParallelEventDispatcher<T> {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    fn default() -> ParallelEventDispatcher<T> {
         ParallelEventDispatcher {
             events: ParallelListenerMap::new(),
             thread_pool: None,
         }
     }
+}
 
+impl<T> ParallelEventDispatcher<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     /// Adds a [`ParallelListener`] to listen for an `event_identifier`.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///

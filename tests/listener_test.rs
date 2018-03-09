@@ -49,7 +49,7 @@ impl Listener<Event> for EnumListener {
 #[test]
 fn dispatch_enum_variant_with_field() {
     let listener = Arc::new(Mutex::new(EnumListener::SomeVariant(false)));
-    let mut dispatcher = EventDispatcher::<Event>::new();
+    let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
         dispatcher.add_listener(Event::EventA, &listener);
@@ -75,7 +75,7 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
         received_event_a: false,
         received_event_b: false,
     }));
-    let mut dispatcher = EventDispatcher::<Event>::new();
+    let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
         dispatcher.add_listener(Event::EventA, &listener);
@@ -106,7 +106,7 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
         received_event_b: false,
     }));
 
-    let mut dispatcher = EventDispatcher::<Event>::new();
+    let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
         dispatcher.add_listener(Event::EventA, &listener);
@@ -165,7 +165,7 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
         received_event_a: false,
         received_event_b: false,
     }));
-    let mut dispatcher = EventDispatcher::<Event>::new();
+    let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
         dispatcher.add_listener(Event::EventA(5), &listener);
