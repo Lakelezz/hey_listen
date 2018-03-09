@@ -61,7 +61,7 @@ fn listeners_dispatch_in_correct_order() {
         name_record: Arc::clone(&names_record),
     }));
 
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::new();
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
     {
         dispatcher.add_listener(Event::EventType, &last_receiver_a, 3);

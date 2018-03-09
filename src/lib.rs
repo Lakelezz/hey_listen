@@ -44,7 +44,7 @@
 //!
 //! fn main() {
 //!     let listener = Arc::new(Mutex::new(ListenerStruct {}));
-//!     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+//!     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
 //!
 //!     dispatcher.add_listener(Event::EventType, &listener);
 //! }
@@ -242,7 +242,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -334,7 +334,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::new();
+    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
@@ -420,7 +420,6 @@ where
 /// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
 /// [`EventListener`]: struct.EventDispatcher.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-#[derive(Default)]
 pub struct PriorityEventDispatcher<P, T>
 where
     P: Ord,
@@ -433,17 +432,23 @@ unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static> Se
     for PriorityEventDispatcher<P, T> {
 }
 
+impl<P, T> Default for PriorityEventDispatcher<P, T>
+where
+    P: Ord + Clone,
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    fn default() -> PriorityEventDispatcher<P, T> {
+        PriorityEventDispatcher {
+            events: PriorityListenerMap::new(),
+        }
+    }
+}
+
 impl<P, T> PriorityEventDispatcher<P, T>
 where
     P: Ord + Clone,
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    pub fn new() -> PriorityEventDispatcher<P, T> {
-        PriorityEventDispatcher {
-            events: PriorityListenerMap::new(),
-        }
-    }
-
     /// Adds a [`Listener`] to listen for an `event_identifier`, considering
     /// a given `priority` implementing the [`Ord`]-trait, to sort dispatch-order.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
@@ -477,7 +482,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::new();
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener, 1);
     /// }
@@ -583,7 +588,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::new();
+    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
@@ -730,7 +735,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
-    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::new();
+    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -828,7 +833,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::new();
+    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Arc::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
