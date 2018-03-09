@@ -428,10 +428,6 @@ where
     events: PriorityListenerMap<P, T>,
 }
 
-unsafe impl<P: Ord, T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static> Send
-    for PriorityEventDispatcher<P, T> {
-}
-
 impl<P, T> Default for PriorityEventDispatcher<P, T>
 where
     P: Ord + Clone,
