@@ -73,18 +73,16 @@ type EventFunction<T> = Vec<Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
 type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
-/// An `enum` returning a request from a [`Listener`] to its `sync` event-dispatcher.
+/// An `enum` returning a request from a listener to its `sync` event-dispatcher.
+/// A request will be processed by the event-dispatcher depending on the variant:
 ///
-/// `StopListening` will remove your [`Listener`] from the
-/// event-dispatcher.
+/// `StopListening` will remove your listener from the event-dispatcher.
 ///
-/// `StopPropagation` will stop dispatching of the just now
-/// acquired `Event`.
+/// `StopPropagation` will stop dispatching of the current `Event` instance.
+/// Therefore, a listener issuing this is the last receiver.
 ///
-/// `StopListeningAndPropagation` a combination of
-/// `StopListening` and `StopPropagation`.
-///
-/// [`Listener`]: trait.Listener.html
+/// `StopListeningAndPropagation` a combination of first `StopListening`
+/// and then `StopPropagation`.
 pub enum SyncDispatcherRequest {
     StopListening,
     StopPropagation,
@@ -1034,6 +1032,8 @@ where
         );
     }
 }
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
