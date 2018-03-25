@@ -26,8 +26,7 @@
 //! extern crate hey_listen;
 //! extern crate parking_lot;
 //!
-//! use hey_listen::Listener;
-//! use hey_listen::EventDispatcher;
+//! use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
 //! use std::sync::Arc;
 //! use parking_lot::Mutex;
 //!
@@ -39,8 +38,10 @@
 //! struct ListenerStruct {}
 //!
 //! impl Listener<Event> for ListenerStruct {
-//!     fn on_event(&mut self, event: &Event) {
+//!     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
 //!         println!("I'm listening! :)");
+//!
+//!         None
 //!     }
 //! }
 //!
@@ -275,8 +276,7 @@ where
     /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::Listener;
-    /// use hey_listen::EventDispatcher;
+    /// use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -286,7 +286,7 @@ where
     /// struct ListenerStruct {}
     ///
     /// impl Listener<Event> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &Event) {}
+    ///     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> { None }
     /// }
     ///
     /// fn main() {
@@ -512,8 +512,7 @@ where
     /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::Listener;
-    /// use hey_listen::PriorityEventDispatcher;
+    /// use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -523,7 +522,7 @@ where
     /// struct ListenerStruct {}
     ///
     /// impl Listener<Event> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &Event) {}
+    ///     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> { None }
     /// }
     ///
     /// fn main() {
