@@ -1,8 +1,7 @@
 extern crate hey_listen;
 extern crate parking_lot;
 
-use hey_listen::PriorityEventDispatcher;
-use hey_listen::Listener;
+use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::sync::Arc;
 use parking_lot::Mutex;
 
@@ -17,9 +16,10 @@ struct EventListener {
 }
 
 impl Listener<Event> for EventListener {
-    fn on_event(&mut self, _event: &Event) {
+    fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
         let mut name_record = self.name_record.try_lock().unwrap();
         name_record.push(self.name.clone());
+        None
     }
 }
 
