@@ -128,6 +128,35 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
 }
 
 #[test]
+fn register_and_request_stop_listening() {
+    #[derive(Clone, Eq, Hash, PartialEq)]
+    enum Event {
+        EventType,
+    }
+
+    struct ListenerStruct {
+        dispatched_events: usize,
+    }
+
+    impl Listener<Event> for ListenerStruct {
+        fn on_event(&mut self, _: &Event) -> Option<SyncDispatcherRequest> {
+            self.dispatched_events += 1;
+            Some(SyncDispatcherRequest::StopListening)
+        }
+    }
+
+    let listener = Arc::new(Mutex::new(ListenerStruct {
+        dispatched_events: 0,
+    }));
+    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+
+    dispatcher.add_listener(Event::EventType, &listener);
+    dispatcher.dispatch_event(&Event::EventType);
+    dispatcher.dispatch_event(&Event::EventType);
+    assert_eq!(listener.lock().dispatched_events, 1);
+}
+
+#[test]
 fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     use std::hash::{Hash, Hasher};
     use std::mem::discriminant;
