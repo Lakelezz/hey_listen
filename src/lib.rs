@@ -600,7 +600,7 @@ where
         self.events.insert(event_identifier, b_tree_map);
     }
 
-    /// Adds a [`Fn`] to listen for an `event_identifier`, considering
+    /// Adds an [`Fn`] to listen for an `event_identifier`, considering
     /// a given `priority` implementing the [`Ord`]-trait in order to sort dispatch-order.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
