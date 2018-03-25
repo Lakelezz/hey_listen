@@ -104,6 +104,52 @@ pub enum ParallelDispatcherRequest {
     StopListening,
 }
 
+/// Iterates over the passed `vec` and applies `function` to each element.
+/// `function`'s returned [`SyncDispatcherRequest`] will instruct
+/// a procedure depending on its variant:
+///
+/// `StopListening`: Removes item from `vec`.
+/// `StopPropagation`: Stops further dispatching to other elements
+/// in `vec`.
+/// `StopListeningAndPropagation`: Execute `StopListening`,
+/// then execute `StopPropagation`.
+///
+/// **Note**: When `StopListening` is being executed,
+/// removal of items from `vec` will result use a swap of elements,
+/// resulting in an alteration of the order items were originally
+/// inserted into `vec`.
+///
+/// **Note**: Unlike [`retain`], [`execute_sync_dispatcher_requests`]
+/// can break the current iteration and is able to match [`SyncDispatcherRequest`]
+/// and perform actions based on variants.
+///
+/// [`retain`]: https://doc.rust-lang.org/alloc/vec/struct.Vec.html#method.retain
+/// [`SyncDispatcherRequest`]: enum.SyncDispatcherRequest.html
+pub(crate) fn execute_sync_dispatcher_requests<T, F>(vec: &mut Vec<T>, mut function: F)
+where
+    F: FnMut(&T) -> Option<SyncDispatcherRequest>,
+{
+    let mut index = 0;
+
+    loop {
+        if index < vec.len() {
+            match function(&vec[index]) {
+                None => index += 1,
+                Some(SyncDispatcherRequest::StopListening) => {
+                    vec.swap_remove(index);
+                }
+                Some(SyncDispatcherRequest::StopPropagation) => break,
+                Some(SyncDispatcherRequest::StopListeningAndPropagation) => {
+                    vec.swap_remove(index);
+                    break;
+                }
+            }
+        } else {
+            break;
+        }
+    }
+}
+
 /// Yields closures and trait-objects.
 struct FnsAndTraits<T>
 where
