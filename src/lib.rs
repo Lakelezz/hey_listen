@@ -246,7 +246,8 @@ where
 
 impl<T> Default for EventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     fn default() -> EventDispatcher<T> {
         EventDispatcher {
             events: ListenerMap::new(),
@@ -734,7 +735,8 @@ where
 
 impl<T> Default for ParallelEventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     fn default() -> ParallelEventDispatcher<T> {
         ParallelEventDispatcher {
             events: ParallelListenerMap::new(),
