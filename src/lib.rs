@@ -433,14 +433,15 @@ where
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
 
-            for listener in (&listener_collection.traits).iter() {
-                if let Some(listener_arc) = listener.upgrade() {
+            execute_sync_dispatcher_requests(&mut listener_collection.traits, |weak_listener| {
+                if let Some(listener_arc) = weak_listener.upgrade() {
                     let mut listener = listener_arc.lock();
-                    listener.on_event(event_identifier);
+                    listener.on_event(event_identifier)
                 } else {
                     found_invalid_weak_ref = true;
+                    None
                 }
-            }
+            });
 
             listener_collection
                 .fns
