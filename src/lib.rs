@@ -1034,3 +1034,52 @@ where
         );
     }
 }
+mod tests {
+    use super::*;
+
+    #[cfg(test)]
+    mod execute_sync_dispatcher_requests {
+        use super::*;
+
+        fn map_usize_to_request(x: &usize) -> Option<SyncDispatcherRequest> {
+            match *x {
+                0 => Some(SyncDispatcherRequest::StopListening),
+                1 => Some(SyncDispatcherRequest::StopPropagation),
+                2 => Some(SyncDispatcherRequest::StopListeningAndPropagation),
+                _ => None,
+            }
+        }
+
+        #[test]
+        fn stop_listening() {
+            let mut vec = vec![0, 0, 0, 1, 1, 1, 1];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert_eq!(vec, [1, 0, 0, 1, 1, 1]);
+        }
+
+        #[test]
+        fn empty_vec() {
+            let mut vec = Vec::new();
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert!(vec.is_empty());
+        }
+
+        #[test]
+        fn removing_all() {
+            let mut vec = vec![0, 0, 0, 0, 0, 0, 0];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert!(vec.is_empty());
+        }
+
+        #[test]
+        fn remove_one_element_and_stop() {
+            let mut vec = vec![2, 0];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert_eq!(vec, [0]);
+        }
+    }
+}
