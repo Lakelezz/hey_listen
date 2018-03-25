@@ -69,7 +69,7 @@ use rayon::prelude::*;
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
-type EventFunction<T> = Vec<Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>>;
+type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest>>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
 type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
@@ -404,7 +404,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
@@ -442,9 +442,9 @@ where
                 }
             });
 
-            listener_collection
-                .fns
-                .retain(|callback| callback(event_identifier).is_ok());
+            execute_sync_dispatcher_requests(&mut listener_collection.fns, |callback| {
+                callback(event_identifier)
+            });
 
             if found_invalid_weak_ref {
                 listener_collection
@@ -653,7 +653,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
         priority: P,
     ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
@@ -703,6 +703,10 @@ where
                         }
                     },
                 );
+
+                execute_sync_dispatcher_requests(&mut listener_collection.fns, |callback| {
+                    callback(event_identifier)
+                });
 
                 if found_invalid_weak_ref {
                     listener_collection
