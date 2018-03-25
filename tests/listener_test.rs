@@ -1,8 +1,7 @@
 extern crate hey_listen;
 extern crate parking_lot;
 
-use hey_listen::EventDispatcher;
-use hey_listen::Listener;
+use hey_listen::{EventDispatcher, Listener, SyncDispatcherRequest};
 use std::sync::Arc;
 use std::ops::Deref;
 use parking_lot::Mutex;
@@ -19,11 +18,12 @@ struct EventListener {
 }
 
 impl Listener<Event> for EventListener {
-    fn on_event(&mut self, event: &Event) {
+    fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
         match *event {
             Event::EventA => self.received_event_a = true,
             Event::EventB => self.received_event_b = true,
         }
+        None
     }
 }
 
@@ -32,12 +32,13 @@ enum EnumListener {
 }
 
 impl Listener<Event> for EnumListener {
-    fn on_event(&mut self, event: &Event) {
+    fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
         if let Event::EventA = *event {
             match *self {
                 EnumListener::SomeVariant(ref mut x) => *x = true,
             }
         }
+        None
     }
 }
 
@@ -153,11 +154,12 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     }
 
     impl Listener<Event> for EventListener {
-        fn on_event(&mut self, event: &Event) {
+        fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
             match *event {
                 Event::EventA(_) => self.received_event_a = true,
                 Event::EventB(_) => self.received_event_b = true,
             }
+            None
         }
     }
 
