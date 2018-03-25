@@ -88,7 +88,7 @@ fn listeners_dispatch_in_correct_order() {
 fn stop_listening() {
     #[derive(Default)]
     struct EventListener {
-        times_dispatched: usize
+        times_dispatched: usize,
     }
 
     impl Listener<Event> for EventListener {
@@ -115,7 +115,7 @@ fn stop_listening() {
 fn stop_propagation() {
     #[derive(Default)]
     struct EventListener {
-        times_dispatched: usize
+        times_dispatched: usize,
     }
 
     impl Listener<Event> for EventListener {
@@ -140,12 +140,11 @@ fn stop_propagation() {
     assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 0);
 }
 
-
 #[test]
 fn stop_listening_and_propagation() {
     #[derive(Default)]
     struct EventListener {
-        times_dispatched: usize
+        times_dispatched: usize,
     }
 
     impl Listener<Event> for EventListener {
