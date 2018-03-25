@@ -171,7 +171,7 @@ where
 {
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
-    fn on_event(&mut self, event: &T);
+    fn on_event(&mut self, event: &T) -> Option<SyncDispatcherRequest>;
 }
 
 /// Every event-receiver needs to implement this trait
