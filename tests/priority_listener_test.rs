@@ -83,3 +83,91 @@ fn listeners_dispatch_in_correct_order() {
     assert_eq!(names_record[4], "3");
     assert_eq!(names_record[5], "3");
 }
+
+#[test]
+fn stop_listening() {
+    #[derive(Default)]
+    struct EventListener {
+        times_dispatched: usize
+    }
+
+    impl Listener<Event> for EventListener {
+        fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
+            self.times_dispatched += 1;
+            Some(SyncDispatcherRequest::StopListening)
+        }
+    }
+
+    let receiver = Arc::new(Mutex::new(EventListener::default()));
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+
+    {
+        dispatcher.add_listener(Event::EventType, &receiver, 0);
+    }
+
+    dispatcher.dispatch_event(&Event::EventType);
+    dispatcher.dispatch_event(&Event::EventType);
+
+    assert_eq!(receiver.try_lock().unwrap().times_dispatched, 1);
+}
+
+#[test]
+fn stop_propagation() {
+    #[derive(Default)]
+    struct EventListener {
+        times_dispatched: usize
+    }
+
+    impl Listener<Event> for EventListener {
+        fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
+            self.times_dispatched += 1;
+            Some(SyncDispatcherRequest::StopPropagation)
+        }
+    }
+
+    let receiver_a = Arc::new(Mutex::new(EventListener::default()));
+    let receiver_b = Arc::new(Mutex::new(EventListener::default()));
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+
+    {
+        dispatcher.add_listener(Event::EventType, &receiver_a, 0);
+        dispatcher.add_listener(Event::EventType, &receiver_b, 0);
+    }
+
+    dispatcher.dispatch_event(&Event::EventType);
+
+    assert_eq!(receiver_a.try_lock().unwrap().times_dispatched, 1);
+    assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 0);
+}
+
+
+#[test]
+fn stop_listening_and_propagation() {
+    #[derive(Default)]
+    struct EventListener {
+        times_dispatched: usize
+    }
+
+    impl Listener<Event> for EventListener {
+        fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
+            self.times_dispatched += 1;
+            Some(SyncDispatcherRequest::StopListeningAndPropagation)
+        }
+    }
+
+    let receiver_a = Arc::new(Mutex::new(EventListener::default()));
+    let receiver_b = Arc::new(Mutex::new(EventListener::default()));
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+
+    {
+        dispatcher.add_listener(Event::EventType, &receiver_a, 0);
+        dispatcher.add_listener(Event::EventType, &receiver_b, 0);
+    }
+
+    dispatcher.dispatch_event(&Event::EventType);
+    dispatcher.dispatch_event(&Event::EventType);
+    dispatcher.dispatch_event(&Event::EventType);
+
+    assert_eq!(receiver_a.try_lock().unwrap().times_dispatched, 1);
+    assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 1);
+}
