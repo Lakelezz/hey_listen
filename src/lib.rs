@@ -384,12 +384,13 @@ where
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
+    ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
-    ///             Ok(())
+    ///
+    ///             None
     ///         } else {
-    ///             Err(SyncDispatcherRequest::StopListening)
+    ///             Some(SyncDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
@@ -633,12 +634,13 @@ where
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
+    ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
-    ///             Ok(())
+    ///
+    ///             None
     ///         } else {
-    ///             Err(SyncDispatcherRequest::StopListening)
+    ///             Some(SyncDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
