@@ -141,29 +141,6 @@ fn stop_propagation() {
 }
 
 #[test]
-fn stop_listening_of_fns() {
-    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
-    let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
-
-    let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
-        let weako = weak_counter_ref.upgrade().unwrap();
-        *weako.try_lock().unwrap() += 1;
-
-        Some(SyncDispatcherRequest::StopListening)
-    });
-
-    dispatcher.add_fn(Event::EventType, closure, 0);
-    assert_eq!(*counter.try_lock().unwrap(), 0);
-
-    dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 1);
-
-    dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 1);
-}
-
-#[test]
 fn stop_listening_and_propagation() {
     #[derive(Default)]
     struct EventListener {
@@ -192,4 +169,27 @@ fn stop_listening_and_propagation() {
 
     assert_eq!(receiver_a.try_lock().unwrap().times_dispatched, 1);
     assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 1);
+}
+
+#[test]
+fn stop_listening_of_fns() {
+    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+
+    let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
+        let weako = weak_counter_ref.upgrade().unwrap();
+        *weako.try_lock().unwrap() += 1;
+
+        Some(SyncDispatcherRequest::StopListening)
+    });
+
+    dispatcher.add_fn(Event::EventType, closure, 0);
+    assert_eq!(*counter.try_lock().unwrap(), 0);
+
+    dispatcher.dispatch_event(&Event::EventType);
+    assert_eq!(*counter.try_lock().unwrap(), 1);
+
+    dispatcher.dispatch_event(&Event::EventType);
+    assert_eq!(*counter.try_lock().unwrap(), 1);
 }
