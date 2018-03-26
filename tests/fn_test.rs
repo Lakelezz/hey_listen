@@ -29,7 +29,8 @@ fn test_closure() {
     let closure = Box::new(move |event: &Event| {
         let listener = weak_listener_ref.upgrade().unwrap();
         listener.lock().test_method(event);
-        Ok(())
+
+        None
     });
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
