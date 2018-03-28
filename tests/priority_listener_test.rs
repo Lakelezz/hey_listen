@@ -178,8 +178,8 @@ fn stop_listening_of_fns() {
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
     let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
-        let weako = weak_counter_ref.upgrade().unwrap();
-        *weako.try_lock().unwrap() += 1;
+        let counter_ref = weak_counter_ref.upgrade().unwrap();
+        *counter_ref.try_lock().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopListening)
     });
