@@ -196,25 +196,26 @@ fn stop_listening_of_fns() {
 
 #[test]
 fn stop_propagation_of_fns() {
-    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
-    let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
 
-    let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
-        let counter_ref = weak_counter_ref.upgrade().unwrap();
-        *weako.try_lock().unwrap() += 1;
+    let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
+    let first_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
+        let counter_ref = &weak_counter_ref.upgrade().unwrap();
+        *counter_ref.try_lock().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
 
+    let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
     let second_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
-        let counter_ref = weak_counter_ref.upgrade().unwrap();
-        *weako.try_lock().unwrap() += 1;
+        let counter_ref = &weak_counter_ref.upgrade().unwrap();
+        *counter_ref.try_lock().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
 
-    dispatcher.add_fn(Event::EventType, closure, 0);
+    dispatcher.add_fn(Event::EventType, first_closure, 0);
     dispatcher.add_fn(Event::EventType, second_closure, 0);
     assert_eq!(*counter.try_lock().unwrap(), 0);
 
