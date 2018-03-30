@@ -216,7 +216,7 @@ fn stop_propagation_of_fns() {
     });
 
     dispatcher.add_fn(Event::EventType, first_closure, 0);
-    dispatcher.add_fn(Event::EventType, second_closure, 0);
+    dispatcher.add_fn(Event::EventType, second_closure, 1);
     assert_eq!(*counter.try_lock().unwrap(), 0);
 
     dispatcher.dispatch_event(&Event::EventType);
@@ -224,4 +224,44 @@ fn stop_propagation_of_fns() {
 
     dispatcher.dispatch_event(&Event::EventType);
     assert_eq!(*counter.try_lock().unwrap(), 2);
+}
+
+#[test]
+fn stop_listening_and_propagation_of_fns() {
+    #[derive(Debug, PartialEq)]
+    pub enum ClosureVisitor {
+        First,
+        Second,
+    }
+    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let visitor_record: Arc<Mutex<Vec<ClosureVisitor>>> = Arc::new(Mutex::new(Vec::new()));
+
+    let weak_record_ref = Arc::downgrade(&Arc::clone(&visitor_record));
+    let first_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
+        let weak_ref = &weak_record_ref.upgrade().unwrap();
+        weak_ref.try_lock().unwrap().push(ClosureVisitor::First);
+
+        Some(SyncDispatcherRequest::StopListeningAndPropagation)
+    });
+
+    let weak_record_ref = Arc::downgrade(&Arc::clone(&visitor_record));
+    let second_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
+        let weak_ref = weak_record_ref.upgrade().unwrap();
+        weak_ref.try_lock().unwrap().push(ClosureVisitor::Second);
+
+        Some(SyncDispatcherRequest::StopListeningAndPropagation)
+    });
+
+    dispatcher.add_fn(Event::EventType, first_closure, 0);
+    dispatcher.add_fn(Event::EventType, second_closure, 1);
+    assert!(visitor_record.try_lock().unwrap().is_empty());
+
+    dispatcher.dispatch_event(&Event::EventType);
+    assert_eq!(*visitor_record.try_lock().unwrap(), [ClosureVisitor::First]);
+
+    dispatcher.dispatch_event(&Event::EventType);
+    assert_eq!(
+        *visitor_record.try_lock().unwrap(),
+        [ClosureVisitor::First, ClosureVisitor::Second]
+    );
 }

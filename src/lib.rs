@@ -103,6 +103,14 @@ pub enum ParallelDispatcherRequest {
     StopListening,
 }
 
+/// When `execute_sync_dispatcher_requests` returns,
+/// this `enum` informs on whether the return is early
+/// and thus forcefully stopped or finished on its own.
+pub(crate) enum ExecuteRequestsResult {
+    Finished,
+    Stopped,
+}
+
 /// Iterates over the passed `vec` and applies `function` to each element.
 /// `function`'s returned [`SyncDispatcherRequest`] will instruct
 /// a procedure depending on its variant:
@@ -118,13 +126,16 @@ pub enum ParallelDispatcherRequest {
 /// resulting in an alteration of the order items were originally
 /// inserted into `vec`.
 ///
-/// **Note**: Unlike [`retain`], [`execute_sync_dispatcher_requests`]
+/// **Note**: Unlike [`retain`], `execute_sync_dispatcher_requests`
 /// can break the current iteration and is able to match [`SyncDispatcherRequest`]
 /// and perform actions based on variants.
 ///
 /// [`retain`]: https://doc.rust-lang.org/alloc/vec/struct.Vec.html#method.retain
 /// [`SyncDispatcherRequest`]: enum.SyncDispatcherRequest.html
-pub(crate) fn execute_sync_dispatcher_requests<T, F>(vec: &mut Vec<T>, mut function: F)
+pub(crate) fn execute_sync_dispatcher_requests<T, F>(
+    vec: &mut Vec<T>,
+    mut function: F,
+) -> ExecuteRequestsResult
 where
     F: FnMut(&T) -> Option<SyncDispatcherRequest>,
 {
@@ -137,14 +148,16 @@ where
                 Some(SyncDispatcherRequest::StopListening) => {
                     vec.swap_remove(index);
                 }
-                Some(SyncDispatcherRequest::StopPropagation) => break,
+                Some(SyncDispatcherRequest::StopPropagation) => {
+                    return ExecuteRequestsResult::Stopped
+                }
                 Some(SyncDispatcherRequest::StopListeningAndPropagation) => {
                     vec.swap_remove(index);
-                    break;
+                    return ExecuteRequestsResult::Stopped;
                 }
             }
         } else {
-            break;
+            return ExecuteRequestsResult::Finished;
         }
     }
 }
@@ -693,7 +706,7 @@ where
             for (_, listener_collection) in prioritised_listener_collection.iter_mut() {
                 let mut found_invalid_weak_ref = false;
 
-                execute_sync_dispatcher_requests(
+                if let ExecuteRequestsResult::Stopped = execute_sync_dispatcher_requests(
                     &mut listener_collection.traits,
                     |weak_listener| {
                         if let Some(listener_arc) = weak_listener.upgrade() {
@@ -704,11 +717,16 @@ where
                             None
                         }
                     },
-                );
+                ) {
+                    break;
+                }
 
-                execute_sync_dispatcher_requests(&mut listener_collection.fns, |callback| {
-                    callback(event_identifier)
-                });
+                if let ExecuteRequestsResult::Stopped = execute_sync_dispatcher_requests(
+                    &mut listener_collection.fns,
+                    |callback| callback(event_identifier),
+                ) {
+                    break;
+                }
 
                 if found_invalid_weak_ref {
                     listener_collection
@@ -723,7 +741,8 @@ where
 /// Errors for ThreadPool-building related failures.
 #[derive(Fail, Debug)]
 pub enum BuildError {
-    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)] NumThreads(String),
+    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)]
+    NumThreads(String),
 }
 
 /// Owns a map of all listened event-variants,
