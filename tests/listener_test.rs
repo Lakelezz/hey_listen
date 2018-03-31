@@ -213,3 +213,39 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     let b_has_been_received = listener.lock().received_event_b;
     assert!(b_has_been_received);
 }
+
+#[test]
+fn stop_propagation_on_sync_dispatcher() {
+    struct EventListener {
+        has_been_dispatched: bool,
+    }
+
+    impl Listener<Event> for EventListener {
+        fn on_event(&mut self, _: &Event) -> Option<SyncDispatcherRequest> {
+            self.has_been_dispatched = true;
+
+            Some(SyncDispatcherRequest::StopPropagation)
+        }
+    }
+
+    let listener_a = Arc::new(Mutex::new(EventListener {
+        has_been_dispatched: false,
+    }));
+
+    let listener_b = Arc::new(Mutex::new(EventListener {
+        has_been_dispatched: false,
+    }));
+
+    let mut dispatcher = EventDispatcher::<Event>::default();
+
+    {
+        dispatcher.add_listener(Event::EventA, &listener_a);
+        dispatcher.add_listener(Event::EventA, &listener_b);
+    }
+
+    dispatcher.dispatch_event(&Event::EventA);
+    let a_has_been_dispatched = listener_a.try_lock().unwrap().has_been_dispatched;
+    let b_has_been_dispatched = listener_b.try_lock().unwrap().has_been_dispatched;
+    assert!(a_has_been_dispatched);
+    assert!(!b_has_been_dispatched);
+}
