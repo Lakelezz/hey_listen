@@ -251,6 +251,52 @@ fn stop_propagation_on_sync_dispatcher() {
 }
 
 #[test]
+fn stop_propagation_on_sync_dispatcher_of_fns() {
+    struct EventListener {
+        use_counter: usize,
+    };
+
+    let listener = Arc::new(Mutex::new(EventListener { use_counter: 0 }));
+
+    let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
+    let closure_a = Box::new(move |_event: &Event| {
+        let listener = &weak_listener_ref.upgrade().unwrap();
+        listener.lock().use_counter += 1;
+
+        Some(SyncDispatcherRequest::StopListening)
+    });
+
+    let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
+    let closure_b = Box::new(move |_event: &Event| {
+        let listener = &weak_listener_ref.upgrade().unwrap();
+        listener.lock().use_counter += 1;
+
+        Some(SyncDispatcherRequest::StopListening)
+    });
+
+    {
+        let counter = listener.try_lock().unwrap().use_counter;
+        assert_eq!(counter, 0);
+    }
+
+    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    dispatcher.add_fn(Event::EventA, closure_a);
+    dispatcher.add_fn(Event::EventA, closure_b);
+    dispatcher.dispatch_event(&Event::EventA);
+
+    {
+        let counter = listener.try_lock().unwrap().use_counter;
+        assert_eq!(counter, 2);
+    }
+
+    {
+        dispatcher.dispatch_event(&Event::EventA);
+        let counter = listener.try_lock().unwrap().use_counter;
+        assert_eq!(counter, 2);
+    }
+}
+
+#[test]
 fn stop_listening_and_propagation_on_sync_dispatcher() {
     struct EventListener {
         dispatch_counter: usize,
