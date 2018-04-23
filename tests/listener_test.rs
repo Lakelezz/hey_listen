@@ -249,3 +249,64 @@ fn stop_propagation_on_sync_dispatcher() {
     assert!(a_has_been_dispatched);
     assert!(!b_has_been_dispatched);
 }
+
+#[test]
+fn stop_listening_and_propagation_on_sync_dispatcher() {
+    struct EventListener {
+        dispatch_counter: usize,
+    }
+
+    impl Listener<Event> for EventListener {
+        fn on_event(&mut self, _: &Event) -> Option<SyncDispatcherRequest> {
+            self.dispatch_counter += 1;
+
+            Some(SyncDispatcherRequest::StopListeningAndPropagation)
+        }
+    }
+
+    let listener_a = Arc::new(Mutex::new(EventListener {
+        dispatch_counter: 0,
+    }));
+
+    let listener_b = Arc::new(Mutex::new(EventListener {
+        dispatch_counter: 0,
+    }));
+
+    let mut dispatcher = EventDispatcher::<Event>::default();
+
+    {
+        dispatcher.add_listener(Event::EventA, &listener_a);
+        dispatcher.add_listener(Event::EventA, &listener_b);
+    }
+
+    {
+        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+        assert_eq!(counter_a, 0);
+        assert_eq!(counter_b, 0);
+    }
+
+    dispatcher.dispatch_event(&Event::EventA);
+    {
+        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+        assert_eq!(counter_a, 1);
+        assert_eq!(counter_b, 0);
+    }
+
+    dispatcher.dispatch_event(&Event::EventA);
+    {
+        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+        assert_eq!(counter_a, 1);
+        assert_eq!(counter_b, 1);
+    }
+
+    dispatcher.dispatch_event(&Event::EventA);
+    {
+        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+        assert_eq!(counter_a, 1);
+        assert_eq!(counter_b, 1);
+    }
+}
