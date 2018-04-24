@@ -1,11 +1,11 @@
 # Contributing
 
-`Hey_Listen` welcomes everyone to get involved, may it be a pull request, suggestion, bug report or a wording improvement! :)
+`Hey_Listen` welcomes everyone to get involved, may it be a pull request, suggestion, bug report, or a wording improvement! : )
 
 ## Contributions
 
 Contributions to `Hey_Listen` should be made via pull requests.
-Issues display development-plans or required brainstorming, feel free to ask, suggest and discuss!
+Issues display development-plans or required brainstorming, feel free to ask, suggest, and discuss!
 
 ## Pull Request Checklist
 
