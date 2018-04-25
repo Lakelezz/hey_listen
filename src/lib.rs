@@ -1,5 +1,7 @@
-//! `Hey_listen` is a collection of event-dispatchers suiting all needs: sync, parallel and prioritised.
-//! Dispatching to Closures, Enums, Structs and every other type supporting `trait`-implementation.
+//! `Hey_listen` is a collection of event-dispatchers aiming to suit all needs!
+//!
+//! Covering synchronous, parallel, and sync-prioritised dispatching to
+//! Closures, Enums, Structs, and every other type supporting `trait`-implementation.
 //!
 //! # Usage
 //! Add this to your `Cargo.toml`:
@@ -24,8 +26,7 @@
 //! extern crate hey_listen;
 //! extern crate parking_lot;
 //!
-//! use hey_listen::Listener;
-//! use hey_listen::EventDispatcher;
+//! use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
 //! use std::sync::Arc;
 //! use parking_lot::Mutex;
 //!
@@ -37,8 +38,10 @@
 //! struct ListenerStruct {}
 //!
 //! impl Listener<Event> for ListenerStruct {
-//!     fn on_event(&mut self, event: &Event) {
+//!     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
 //!         println!("I'm listening! :)");
+//!
+//!         None
 //!     }
 //! }
 //!
@@ -66,22 +69,20 @@ use rayon::prelude::*;
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
-type EventFunction<T> = Vec<Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>>;
+type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest>>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
 type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
-/// An `enum` returning a request from a [`Listener`] to its `sync` event-dispatcher.
+/// An `enum` returning a request from a listener to its `sync` event-dispatcher.
+/// A request will be processed by the event-dispatcher depending on the variant:
 ///
-/// `StopListening` will remove your [`Listener`] from the
-/// event-dispatcher.
+/// `StopListening` will remove your listener from the event-dispatcher.
 ///
-/// `StopPropagation` will stop dispatching of the just now
-/// acquired `Event`.
+/// `StopPropagation` will stop dispatching of the current `Event` instance.
+/// Therefore, a listener issuing this is the last receiver.
 ///
-/// `StopListeningAndPropagation` a combination of
-/// `StopListening` and `StopPropagation`.
-///
-/// [`Listener`]: trait.Listener.html
+/// `StopListeningAndPropagation` a combination of first `StopListening`
+/// and then `StopPropagation`.
 pub enum SyncDispatcherRequest {
     StopListening,
     StopPropagation,
@@ -100,6 +101,65 @@ pub enum SyncDispatcherRequest {
 /// [`Listener`]: trait.Listener.html
 pub enum ParallelDispatcherRequest {
     StopListening,
+}
+
+/// When `execute_sync_dispatcher_requests` returns,
+/// this `enum` informs on whether the return is early
+/// and thus forcefully stopped or finished on its own.
+pub(crate) enum ExecuteRequestsResult {
+    Finished,
+    Stopped,
+}
+
+/// Iterates over the passed `vec` and applies `function` to each element.
+/// `function`'s returned [`SyncDispatcherRequest`] will instruct
+/// a procedure depending on its variant:
+///
+/// `StopListening`: Removes item from `vec`.
+/// `StopPropagation`: Stops further dispatching to other elements
+/// in `vec`.
+/// `StopListeningAndPropagation`: Execute `StopListening`,
+/// then execute `StopPropagation`.
+///
+/// **Note**: When `StopListening` is being executed,
+/// removal of items from `vec` will result use a swap of elements,
+/// resulting in an alteration of the order items were originally
+/// inserted into `vec`.
+///
+/// **Note**: Unlike [`retain`], `execute_sync_dispatcher_requests`
+/// can break the current iteration and is able to match [`SyncDispatcherRequest`]
+/// and perform actions based on variants.
+///
+/// [`retain`]: https://doc.rust-lang.org/alloc/vec/struct.Vec.html#method.retain
+/// [`SyncDispatcherRequest`]: enum.SyncDispatcherRequest.html
+pub(crate) fn execute_sync_dispatcher_requests<T, F>(
+    vec: &mut Vec<T>,
+    mut function: F,
+) -> ExecuteRequestsResult
+where
+    F: FnMut(&T) -> Option<SyncDispatcherRequest>,
+{
+    let mut index = 0;
+
+    loop {
+        if index < vec.len() {
+            match function(&vec[index]) {
+                None => index += 1,
+                Some(SyncDispatcherRequest::StopListening) => {
+                    vec.swap_remove(index);
+                }
+                Some(SyncDispatcherRequest::StopPropagation) => {
+                    return ExecuteRequestsResult::Stopped
+                }
+                Some(SyncDispatcherRequest::StopListeningAndPropagation) => {
+                    vec.swap_remove(index);
+                    return ExecuteRequestsResult::Stopped;
+                }
+            }
+        } else {
+            return ExecuteRequestsResult::Finished;
+        }
+    }
 }
 
 /// Yields closures and trait-objects.
@@ -169,7 +229,7 @@ where
 {
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
-    fn on_event(&mut self, event: &T);
+    fn on_event(&mut self, event: &T) -> Option<SyncDispatcherRequest>;
 }
 
 /// Every event-receiver needs to implement this trait
@@ -198,7 +258,8 @@ where
 
 impl<T> Default for EventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     fn default() -> EventDispatcher<T> {
         EventDispatcher {
             events: ListenerMap::new(),
@@ -226,8 +287,7 @@ where
     /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::Listener;
-    /// use hey_listen::EventDispatcher;
+    /// use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -237,7 +297,7 @@ where
     /// struct ListenerStruct {}
     ///
     /// impl Listener<Event> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &Event) {}
+    ///     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> { None }
     /// }
     ///
     /// fn main() {
@@ -337,12 +397,13 @@ where
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
+    ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
-    ///             Ok(())
+    ///
+    ///             None
     ///         } else {
-    ///             Err(SyncDispatcherRequest::StopListening)
+    ///             Some(SyncDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
@@ -357,7 +418,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
@@ -385,18 +446,19 @@ where
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let mut found_invalid_weak_ref = false;
 
-            for listener in (&listener_collection.traits).iter() {
-                if let Some(listener_arc) = listener.upgrade() {
+            execute_sync_dispatcher_requests(&mut listener_collection.traits, |weak_listener| {
+                if let Some(listener_arc) = weak_listener.upgrade() {
                     let mut listener = listener_arc.lock();
-                    listener.on_event(event_identifier);
+                    listener.on_event(event_identifier)
                 } else {
                     found_invalid_weak_ref = true;
+                    None
                 }
-            }
+            });
 
-            listener_collection
-                .fns
-                .retain(|callback| callback(event_identifier).is_ok());
+            execute_sync_dispatcher_requests(&mut listener_collection.fns, |callback| {
+                callback(event_identifier)
+            });
 
             if found_invalid_weak_ref {
                 listener_collection
@@ -462,8 +524,7 @@ where
     /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::Listener;
-    /// use hey_listen::PriorityEventDispatcher;
+    /// use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -473,7 +534,7 @@ where
     /// struct ListenerStruct {}
     ///
     /// impl Listener<Event> for ListenerStruct {
-    ///     fn on_event(&mut self, event: &Event) {}
+    ///     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> { None }
     /// }
     ///
     /// fn main() {
@@ -550,7 +611,7 @@ where
         self.events.insert(event_identifier, b_tree_map);
     }
 
-    /// Adds a [`Fn`] to listen for an `event_identifier`, considering
+    /// Adds an [`Fn`] to listen for an `event_identifier`, considering
     /// a given `priority` implementing the [`Ord`]-trait in order to sort dispatch-order.
     /// If `event_identifier` is a new [`HashMap`]-key, it will be added.
     ///
@@ -562,8 +623,7 @@ where
     /// extern crate hey_listen;
     /// extern crate parking_lot;
     ///
-    /// use hey_listen::PriorityEventDispatcher;
-    /// use hey_listen::SyncDispatcherRequest;
+    /// use hey_listen::{PriorityEventDispatcher, SyncDispatcherRequest};
     /// use std::sync::Arc;
     /// use parking_lot::Mutex;
     ///
@@ -587,12 +647,13 @@ where
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Box::new(move |event: &Event| -> Result<(), SyncDispatcherRequest> {
+    ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
-    ///             Ok(())
+    ///
+    ///             None
     ///         } else {
-    ///             Err(SyncDispatcherRequest::StopListening)
+    ///             Some(SyncDispatcherRequest::StopListening)
     ///         }
     ///     });
     ///
@@ -607,7 +668,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Result<(), SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
         priority: P,
     ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
@@ -645,13 +706,26 @@ where
             for (_, listener_collection) in prioritised_listener_collection.iter_mut() {
                 let mut found_invalid_weak_ref = false;
 
-                for listener in (&listener_collection.traits).iter() {
-                    if let Some(listener_arc) = listener.upgrade() {
-                        let mut listener = listener_arc.lock();
-                        listener.on_event(event_identifier);
-                    } else {
-                        found_invalid_weak_ref = true;
-                    }
+                if let ExecuteRequestsResult::Stopped = execute_sync_dispatcher_requests(
+                    &mut listener_collection.traits,
+                    |weak_listener| {
+                        if let Some(listener_arc) = weak_listener.upgrade() {
+                            let mut listener = listener_arc.lock();
+                            listener.on_event(event_identifier)
+                        } else {
+                            found_invalid_weak_ref = true;
+                            None
+                        }
+                    },
+                ) {
+                    break;
+                }
+
+                if let ExecuteRequestsResult::Stopped = execute_sync_dispatcher_requests(
+                    &mut listener_collection.fns,
+                    |callback| callback(event_identifier),
+                ) {
+                    break;
                 }
 
                 if found_invalid_weak_ref {
@@ -667,7 +741,8 @@ where
 /// Errors for ThreadPool-building related failures.
 #[derive(Fail, Debug)]
 pub enum BuildError {
-    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)] NumThreads(String),
+    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)]
+    NumThreads(String),
 }
 
 /// Owns a map of all listened event-variants,
@@ -685,7 +760,8 @@ where
 
 impl<T> Default for ParallelEventDispatcher<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static {
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
     fn default() -> ParallelEventDispatcher<T> {
         ParallelEventDispatcher {
             events: ParallelListenerMap::new(),
@@ -982,5 +1058,56 @@ where
                     });
             },
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(test)]
+    mod execute_sync_dispatcher_requests {
+        use super::*;
+
+        fn map_usize_to_request(x: &usize) -> Option<SyncDispatcherRequest> {
+            match *x {
+                0 => Some(SyncDispatcherRequest::StopListening),
+                1 => Some(SyncDispatcherRequest::StopPropagation),
+                2 => Some(SyncDispatcherRequest::StopListeningAndPropagation),
+                _ => None,
+            }
+        }
+
+        #[test]
+        fn stop_listening() {
+            let mut vec = vec![0, 0, 0, 1, 1, 1, 1];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert_eq!(vec, [1, 0, 0, 1, 1, 1]);
+        }
+
+        #[test]
+        fn empty_vec() {
+            let mut vec = Vec::new();
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert!(vec.is_empty());
+        }
+
+        #[test]
+        fn removing_all() {
+            let mut vec = vec![0, 0, 0, 0, 0, 0, 0];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert!(vec.is_empty());
+        }
+
+        #[test]
+        fn remove_one_element_and_stop() {
+            let mut vec = vec![2, 0];
+            execute_sync_dispatcher_requests(&mut vec, map_usize_to_request);
+
+            assert_eq!(vec, [0]);
+        }
     }
 }
