@@ -100,6 +100,7 @@ pub enum SyncDispatcherRequest {
 /// stop propagation as the propagation is happening parallel.
 ///
 /// [`Listener`]: trait.Listener.html
+#[derive(Debug)]
 pub enum ParallelDispatcherRequest {
     StopListening,
 }
