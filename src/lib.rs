@@ -83,6 +83,7 @@ type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherReque
 ///
 /// `StopListeningAndPropagation` a combination of first `StopListening`
 /// and then `StopPropagation`.
+#[derive(Debug)]
 pub enum SyncDispatcherRequest {
     StopListening,
     StopPropagation,
