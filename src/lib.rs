@@ -64,8 +64,8 @@ use std::sync::{Arc, Weak};
 use std::hash::Hash;
 use std::collections::{BTreeMap, HashMap};
 use parking_lot::Mutex;
-use rayon::{join, ThreadPool};
-use rayon::prelude::*;
+use rayon::{join, ThreadPool,
+            prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator}};
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
