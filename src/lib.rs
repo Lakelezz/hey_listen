@@ -108,6 +108,7 @@ pub enum ParallelDispatcherRequest {
 /// When `execute_sync_dispatcher_requests` returns,
 /// this `enum` informs on whether the return is early
 /// and thus forcefully stopped or finished on its own.
+#[derive(Debug)]
 pub(crate) enum ExecuteRequestsResult {
     Finished,
     Stopped,
