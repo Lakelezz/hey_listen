@@ -194,7 +194,7 @@ where
 }
 
 /// Yields `Send` and `Sync` closures and trait-objects.
-pub struct ParallelFnsAndTraits<T>
+struct ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
