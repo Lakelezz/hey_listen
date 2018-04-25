@@ -8,20 +8,20 @@ use parking_lot::Mutex;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 enum Event {
-    EventA,
-    EventB,
+    VariantA,
+    VariantB,
 }
 
 struct EventListener {
-    received_event_a: bool,
-    received_event_b: bool,
+    received_variant_a: bool,
+    received_variant_b: bool,
 }
 
 impl Listener<Event> for EventListener {
     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
         match *event {
-            Event::EventA => self.received_event_a = true,
-            Event::EventB => self.received_event_b = true,
+            Event::VariantA => self.received_variant_a = true,
+            Event::VariantB => self.received_variant_b = true,
         }
         None
     }
@@ -33,7 +33,7 @@ enum EnumListener {
 
 impl Listener<Event> for EnumListener {
     fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
-        if let Event::EventA = *event {
+        if let Event::VariantA = *event {
             match *self {
                 EnumListener::SomeVariant(ref mut x) => *x = true,
             }
@@ -42,21 +42,16 @@ impl Listener<Event> for EnumListener {
     }
 }
 
-/// **Intended test-behaviour**: When registering one listener for one event,
-/// only listened event-variants will be dispatched to the listener.
-///
-/// **Test**: We will register our listener for one test-variant but will
-/// dispatch all two variants.
 #[test]
 fn dispatch_enum_variant_with_field() {
     let listener = Arc::new(Mutex::new(EnumListener::SomeVariant(false)));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA, &listener);
+        dispatcher.add_listener(Event::VariantA, &listener);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.dispatch_event(&Event::VariantA);
 
     let enum_field = match *listener.lock().deref() {
         EnumListener::SomeVariant(x) => x,
@@ -65,66 +60,86 @@ fn dispatch_enum_variant_with_field() {
     assert!(enum_field);
 }
 
-/// **Intended test-behaviour**: When registering one listener for one event,
-/// only listened event-variants will be dispatched to the listener.
-///
-/// **Test**: We will register our listener for one test-variant but will
-/// dispatch all two variants.
 #[test]
 fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() {
     let listener = Arc::new(Mutex::new(EventListener {
-        received_event_a: false,
-        received_event_b: false,
+        received_variant_a: false,
+        received_variant_b: false,
     }));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA, &listener);
+        dispatcher.add_listener(Event::VariantA, &listener);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
-    let a_has_been_received = listener.lock().received_event_a;
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantA);
+    let a_has_been_received = listener.lock().received_variant_a;
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
-    dispatcher.dispatch_event(&Event::EventB);
-    let a_has_been_received = listener.lock().received_event_a;
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantB);
+    let a_has_been_received = listener.lock().received_variant_a;
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 }
 
-/// **Intended test-behaviour**: When registering one listener for two Event,
-/// both of them should be dispatched to the listener.
-///
-/// **Test**: We will register our listener for two variants and will
-/// dispatch both variants.
 #[test]
 fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
     let listener = Arc::new(Mutex::new(EventListener {
-        received_event_a: false,
-        received_event_b: false,
+        received_variant_a: false,
+        received_variant_b: false,
     }));
 
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA, &listener);
-        dispatcher.add_listener(Event::EventB, &listener);
+        dispatcher.add_listener(Event::VariantA, &listener);
+        dispatcher.add_listener(Event::VariantB, &listener);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
-    let a_has_been_received = listener.lock().received_event_a;
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantA);
+    let a_has_been_received = listener.lock().received_variant_a;
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
-    dispatcher.dispatch_event(&Event::EventB);
-    let a_has_been_received = listener.lock().received_event_a;
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantB);
+    let a_has_been_received = listener.lock().received_variant_a;
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(a_has_been_received);
     assert!(b_has_been_received);
+}
+
+#[test]
+fn dispatch_to_function() {
+    struct EventListener {
+        used_method: bool,
+    }
+
+    impl EventListener {
+        fn test_method(&mut self, _event: &Event) {
+            self.used_method = true;
+        }
+    }
+
+    let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
+    let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
+
+    let closure = Box::new(move |event: &Event| {
+        let listener = weak_listener_ref.upgrade().unwrap();
+        listener.lock().test_method(event);
+
+        None
+    });
+
+    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    dispatcher.add_fn(Event::VariantA, closure);
+    dispatcher.dispatch_event(&Event::VariantA);
+
+    let listener = listener.lock();
+    assert!(listener.used_method);
 }
 
 #[test]
@@ -163,8 +178,8 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
 
     #[derive(Clone, Eq)]
     enum Event {
-        EventA(i32),
-        EventB(i32),
+        VariantA(i32),
+        VariantB(i32),
     }
 
     impl Hash for Event {
@@ -178,39 +193,39 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     }
 
     struct EventListener {
-        received_event_a: bool,
-        received_event_b: bool,
+        received_variant_a: bool,
+        received_variant_b: bool,
     }
 
     impl Listener<Event> for EventListener {
         fn on_event(&mut self, event: &Event) -> Option<SyncDispatcherRequest> {
             match *event {
-                Event::EventA(_) => self.received_event_a = true,
-                Event::EventB(_) => self.received_event_b = true,
+                Event::VariantA(_) => self.received_variant_a = true,
+                Event::VariantB(_) => self.received_variant_b = true,
             }
             None
         }
     }
 
     let listener = Arc::new(Mutex::new(EventListener {
-        received_event_a: false,
-        received_event_b: false,
+        received_variant_a: false,
+        received_variant_b: false,
     }));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA(5), &listener);
-        dispatcher.add_listener(Event::EventB(0), &listener);
+        dispatcher.add_listener(Event::VariantA(5), &listener);
+        dispatcher.add_listener(Event::VariantB(0), &listener);
     }
 
-    dispatcher.dispatch_event(&Event::EventA(10));
-    let a_has_been_received = listener.lock().received_event_a;
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantA(10));
+    let a_has_been_received = listener.lock().received_variant_a;
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
-    dispatcher.dispatch_event(&Event::EventB(10));
-    let b_has_been_received = listener.lock().received_event_b;
+    dispatcher.dispatch_event(&Event::VariantB(10));
+    let b_has_been_received = listener.lock().received_variant_b;
     assert!(b_has_been_received);
 }
 
@@ -239,11 +254,11 @@ fn stop_propagation_on_sync_dispatcher() {
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA, &listener_a);
-        dispatcher.add_listener(Event::EventA, &listener_b);
+        dispatcher.add_listener(Event::VariantA, &listener_a);
+        dispatcher.add_listener(Event::VariantA, &listener_b);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.dispatch_event(&Event::VariantA);
     let a_has_been_dispatched = listener_a.try_lock().unwrap().has_been_dispatched;
     let b_has_been_dispatched = listener_b.try_lock().unwrap().has_been_dispatched;
     assert!(a_has_been_dispatched);
@@ -275,8 +290,8 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     {
-        dispatcher.add_listener(Event::EventA, &listener_a);
-        dispatcher.add_listener(Event::EventA, &listener_b);
+        dispatcher.add_listener(Event::VariantA, &listener_a);
+        dispatcher.add_listener(Event::VariantA, &listener_b);
     }
 
     {
@@ -286,7 +301,7 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
         assert_eq!(counter_b, 0);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.dispatch_event(&Event::VariantA);
     {
         let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
         let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
@@ -294,7 +309,7 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
         assert_eq!(counter_b, 0);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.dispatch_event(&Event::VariantA);
     {
         let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
         let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
@@ -302,7 +317,7 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
         assert_eq!(counter_b, 1);
     }
 
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.dispatch_event(&Event::VariantA);
     {
         let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
         let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
@@ -341,9 +356,9 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
     }
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
-    dispatcher.add_fn(Event::EventA, closure_a);
-    dispatcher.add_fn(Event::EventA, closure_b);
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.add_fn(Event::VariantA, closure_a);
+    dispatcher.add_fn(Event::VariantA, closure_b);
+    dispatcher.dispatch_event(&Event::VariantA);
 
     {
         let counter = listener.try_lock().unwrap().use_counter;
@@ -351,7 +366,7 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
     }
 
     {
-        dispatcher.dispatch_event(&Event::EventA);
+        dispatcher.dispatch_event(&Event::VariantA);
         let counter = listener.try_lock().unwrap().use_counter;
         assert_eq!(counter, 2);
     }
@@ -387,9 +402,9 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
     }
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
-    dispatcher.add_fn(Event::EventA, closure_a);
-    dispatcher.add_fn(Event::EventA, closure_b);
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.add_fn(Event::VariantA, closure_a);
+    dispatcher.add_fn(Event::VariantA, closure_b);
+    dispatcher.dispatch_event(&Event::VariantA);
 
     {
         let counter = listener.try_lock().unwrap().use_counter;
@@ -397,7 +412,7 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
     }
 
     {
-        dispatcher.dispatch_event(&Event::EventA);
+        dispatcher.dispatch_event(&Event::VariantA);
         let counter = listener.try_lock().unwrap().use_counter;
         assert_eq!(counter, 2);
     }
@@ -433,9 +448,9 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     }
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
-    dispatcher.add_fn(Event::EventA, closure_a);
-    dispatcher.add_fn(Event::EventA, closure_b);
-    dispatcher.dispatch_event(&Event::EventA);
+    dispatcher.add_fn(Event::VariantA, closure_a);
+    dispatcher.add_fn(Event::VariantA, closure_b);
+    dispatcher.dispatch_event(&Event::VariantA);
 
     {
         let counter = listener.try_lock().unwrap().use_counter;
@@ -443,13 +458,13 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     }
 
     {
-        dispatcher.dispatch_event(&Event::EventA);
+        dispatcher.dispatch_event(&Event::VariantA);
         let counter = listener.try_lock().unwrap().use_counter;
         assert_eq!(counter, 2);
     }
 
     {
-        dispatcher.dispatch_event(&Event::EventA);
+        dispatcher.dispatch_event(&Event::VariantA);
         let counter = listener.try_lock().unwrap().use_counter;
         assert_eq!(counter, 2);
     }
