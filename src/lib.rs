@@ -3,6 +3,8 @@
 //! Covering synchronous, parallel, and sync-prioritised dispatching to
 //! Closures, Enums, Structs, and every other type supporting `trait`-implementation.
 //!
+//! View the [`examples`] on how to use each dispatcher.
+//!
 //! # Usage
 //! Add this to your `Cargo.toml`:
 //!
@@ -53,6 +55,7 @@
 //! }
 //!
 //! ```
+//! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
