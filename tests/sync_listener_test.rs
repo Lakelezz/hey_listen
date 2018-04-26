@@ -71,14 +71,14 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let a_has_been_received = listener.lock().received_variant_a;
-    let b_has_been_received = listener.lock().received_variant_b;
+    let a_has_been_received = listener.try_lock().unwrap().received_variant_a;
+    let b_has_been_received = listener.try_lock().unwrap().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
     dispatcher.dispatch_event(&Event::VariantB);
-    let a_has_been_received = listener.lock().received_variant_a;
-    let b_has_been_received = listener.lock().received_variant_b;
+    let a_has_been_received = listener.try_lock().unwrap().received_variant_a;
+    let b_has_been_received = listener.try_lock().unwrap().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 }
