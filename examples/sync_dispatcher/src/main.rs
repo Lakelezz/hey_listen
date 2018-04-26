@@ -1,5 +1,5 @@
 //! This example shows you how to use the synchronous event-dispatcher: `EventDispatcher`.
-//! We will use enums and trait objects.
+//! We will dispatch enumes to trait-objects and closures.
 //!
 //! The `EventDispatcher` itself can only dispatch to one listener at a time,
 //! thus referred to as synchronous.
