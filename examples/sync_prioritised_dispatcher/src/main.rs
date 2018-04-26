@@ -1,5 +1,5 @@
 //! This example shows you how to use the synchronous prioritised event-dispatcher: `PriorityEventDispatcher`.
-//! We will dispatch enumes to trait-objects and closures.
+//! We will dispatch enums to trait-objects and closures.
 //!
 //! The `PriorityEventDispatcher` itself can only dispatch to one listener at a time,
 //! thus referred to as synchronous.
@@ -43,7 +43,7 @@ impl Eq for EventEnum {}
 struct ListenerStruct {}
 
 // This implements the `Listener`-trait, enabling the struct above (`ListenerStruct`)
-// to become a trait object when starting listening.
+// to become a trait-object when starting listening.
 impl Listener<EventEnum> for ListenerStruct {
     fn on_event(&mut self, event: &EventEnum) -> Option<SyncDispatcherRequest> {
         // Do whatever you want inside here, you can even access the struct's fields.
@@ -53,9 +53,9 @@ impl Listener<EventEnum> for ListenerStruct {
             EventEnum::EventVariant(value) => println!("I'm listening and received event with value: {}.", value),
         }
 
-        // At the end, we have to return and `std::Option` request back to
+        // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
         // the dispatcher.
-        // This could be:
+        // This request gives an instruction back to the dispatcher, here are the variants:
         // - `SyncDispatcherRequest::StopListening` to automatically
         // stop listening.
         // - `SyncDispatcherRequest::StopPropagation` stops the dispatcher from dispatching
@@ -67,26 +67,24 @@ impl Listener<EventEnum> for ListenerStruct {
 }
 
 fn main() {
-    // Create your listener.
+    // Create our listener.
     let listener = Arc::new(Mutex::new(ListenerStruct {}));
 
-    // Create your dispatcher and define the generic type what the dispatcher
-    // shall accept as dispatchable type, it's our declared `EventEnum` in this
-    // example.
+    // Create our dispatcher, specify that we use `u32` as order-type
+    // and `EventEnum` as event-enum.
     let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> = PriorityEventDispatcher::default();
 
     // Start listening to a listener and decide their dispatch-priority, here level `1`.
     // The value we give `EventVariant` is not important for adding a listener,
     // since we implemented `Hash`-, `Eq`-, and `PartialEq`-trait in a manner that
-    // bypasses fields for comparison but compares variants.
+    // we bypass fields for comparison but compares variants.
     dispatcher.add_listener(EventEnum::EventVariant(0), &listener, 1);
 
-    // If you want to work with a closure, you can do the following:
+    // If we want to work with a closure, we can do the following:
     let listening_closure = Box::new(move |event: &EventEnum| {
-        // Be aware, since enum's variants are no types,
-        // whenever you want to work with the enum,
-        // you need to pattern-match it of if-let-bind in order to find its variant,
-        // even if you listen to only one variant.
+        // We have to be awar that an enum's variants are no types,
+        // whenever we want to work with the enum we need to
+        // pattern-match or if-let-bind the enum in order to use its variant.
         let event_name = match *event {
             EventEnum::EventVariant(value) => value.to_string(),
         };

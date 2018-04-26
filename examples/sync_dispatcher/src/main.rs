@@ -1,5 +1,5 @@
 //! This example shows you how to use the synchronous event-dispatcher: `EventDispatcher`.
-//! We will dispatch enumes to trait-objects and closures.
+//! We will dispatch enums to trait-objects and closures.
 //!
 //! The `EventDispatcher` itself can only dispatch to one listener at a time,
 //! thus referred to as synchronous.
@@ -32,21 +32,23 @@ enum EventEnum {
 struct ListenerStruct {}
 
 // This implements the `Listener`-trait, enabling the struct above (`ListenerStruct`)
-// to become a trait object when starting listening.
+// to become a trait-object when starting listening.
 impl Listener<EventEnum> for ListenerStruct {
     fn on_event(&mut self, _event: &EventEnum) -> Option<SyncDispatcherRequest> {
-        // Do whatever you want inside here, you can even access the struct's fields.
-        // Be aware, the event is immutable.
         println!("I'm listening! :)");
 
-        // At the end, we have to return and `std::Option` request back to
+        // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
         // the dispatcher.
-        // This could be:
+        // This request gives an instruction back to the dispatcher, here are the variants:
+        //
         // - `SyncDispatcherRequest::StopListening` to automatically
         // stop listening.
+        //
         // - `SyncDispatcherRequest::StopPropagation` stops the dispatcher from dispatching
         // to other listeners in this instance of dispatching.
+        //
         // - `SyncDispatcherRequest::StopListeningAndPropagation` combines the first and second.
+        //
         // - `None`, equals to sending no request to the dispatcher, everything will stay as it is.
         None
     }
