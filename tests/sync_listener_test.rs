@@ -68,9 +68,7 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
     }));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
     let a_has_been_received = listener.lock().received_variant_a;
@@ -94,10 +92,8 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
 
     let mut dispatcher = EventDispatcher::<Event>::default();
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener);
-        dispatcher.add_listener(Event::VariantB, &listener);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener);
+    dispatcher.add_listener(Event::VariantB, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
     let a_has_been_received = listener.lock().received_variant_a;
@@ -163,6 +159,7 @@ fn register_and_request_stop_listening() {
     let listener = Arc::new(Mutex::new(ListenerStruct {
         dispatched_events: 0,
     }));
+
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
 
     dispatcher.add_listener(Event::EventType, &listener);
@@ -213,10 +210,8 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     }));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
-    {
-        dispatcher.add_listener(Event::VariantA(5), &listener);
-        dispatcher.add_listener(Event::VariantB(0), &listener);
-    }
+    dispatcher.add_listener(Event::VariantA(5), &listener);
+    dispatcher.add_listener(Event::VariantB(0), &listener);
 
     dispatcher.dispatch_event(&Event::VariantA(10));
     let a_has_been_received = listener.lock().received_variant_a;
