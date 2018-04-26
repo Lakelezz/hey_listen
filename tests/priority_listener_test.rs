@@ -129,10 +129,8 @@ fn stop_propagation() {
     let receiver_b = Arc::new(Mutex::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
-    {
-        dispatcher.add_listener(Event::EventType, &receiver_a, 0);
-        dispatcher.add_listener(Event::EventType, &receiver_b, 0);
-    }
+    dispatcher.add_listener(Event::EventType, &receiver_a, 0);
+    dispatcher.add_listener(Event::EventType, &receiver_b, 0);
 
     dispatcher.dispatch_event(&Event::EventType);
 
@@ -158,10 +156,8 @@ fn stop_listening_and_propagation() {
     let receiver_b = Arc::new(Mutex::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
-    {
-        dispatcher.add_listener(Event::EventType, &receiver_a, 0);
-        dispatcher.add_listener(Event::EventType, &receiver_b, 0);
-    }
+    dispatcher.add_listener(Event::EventType, &receiver_a, 0);
+    dispatcher.add_listener(Event::EventType, &receiver_b, 0);
 
     dispatcher.dispatch_event(&Event::EventType);
     dispatcher.dispatch_event(&Event::EventType);

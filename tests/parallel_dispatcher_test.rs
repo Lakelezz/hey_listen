@@ -30,10 +30,8 @@ fn dispatch_parallel_to_dyn_traits() {
     let listener_a = Arc::new(Mutex::new(CountingEventListener::default()));
     let listener_b = Arc::new(Mutex::new(CountingEventListener::default()));
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener_a);
-        dispatcher.add_listener(Event::VariantB, &listener_b);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener_a);
+    dispatcher.add_listener(Event::VariantB, &listener_b);
 
     assert_eq!(listener_a.try_lock().unwrap().dispatch_counter, 0);
     assert_eq!(listener_b.try_lock().unwrap().dispatch_counter, 0);
@@ -84,10 +82,8 @@ fn dispatch_parallel_to_functions() {
         None
     });
 
-    {
-        dispatcher.add_fn(Event::VariantA, closure_a);
-        dispatcher.add_fn(Event::VariantB, closure_b);
-    }
+    dispatcher.add_fn(Event::VariantA, closure_a);
+    dispatcher.add_fn(Event::VariantB, closure_b);
 
     assert_eq!(counter_a.try_lock().unwrap().counter, 0);
     assert_eq!(counter_b.try_lock().unwrap().counter, 0);
@@ -129,10 +125,8 @@ fn stop_listening_parallel_for_dyn_traits() {
     let listener_a = Arc::new(Mutex::new(CountingEventListener::default()));
     let listener_b = Arc::new(Mutex::new(CountingEventListener::default()));
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener_a);
-        dispatcher.add_listener(Event::VariantB, &listener_b);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener_a);
+    dispatcher.add_listener(Event::VariantB, &listener_b);
 
     assert_eq!(listener_a.try_lock().unwrap().dispatch_counter, 0);
     assert_eq!(listener_b.try_lock().unwrap().dispatch_counter, 0);
@@ -183,10 +177,8 @@ fn stop_listening_parallel_for_fns() {
         None
     });
 
-    {
-        dispatcher.add_fn(Event::VariantA, closure_a);
-        dispatcher.add_fn(Event::VariantB, closure_b);
-    }
+    dispatcher.add_fn(Event::VariantA, closure_a);
+    dispatcher.add_fn(Event::VariantB, closure_b);
 
     assert_eq!(counter_a.try_lock().unwrap().counter, 0);
     assert_eq!(counter_b.try_lock().unwrap().counter, 0);

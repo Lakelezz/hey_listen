@@ -289,10 +289,8 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
 
     let mut dispatcher = EventDispatcher::<Event>::default();
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener_a);
-        dispatcher.add_listener(Event::VariantA, &listener_b);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener_a);
+    dispatcher.add_listener(Event::VariantA, &listener_b);
 
     {
         let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
