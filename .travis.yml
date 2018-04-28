@@ -13,5 +13,6 @@ matrix:
     - beta
     - nightly
 script:
+  - cargo clean
   - cargo build
   - cargo test
