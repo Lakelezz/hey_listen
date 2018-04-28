@@ -1,5 +1,5 @@
 [package]
-name = "sync_dispatcher"
+name = "parallel_dispatcher"
 version = "0.1.0"
 authors = ["my name <my@email.address>"]
 
