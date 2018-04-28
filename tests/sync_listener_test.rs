@@ -46,10 +46,7 @@ impl Listener<Event> for EnumListener {
 fn dispatch_enum_variant_with_field() {
     let listener = Arc::new(Mutex::new(EnumListener::SomeVariant(false)));
     let mut dispatcher = EventDispatcher::<Event>::default();
-
-    {
-        dispatcher.add_listener(Event::VariantA, &listener);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
 
@@ -66,8 +63,8 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
         received_variant_a: false,
         received_variant_b: false,
     }));
-    let mut dispatcher = EventDispatcher::<Event>::default();
 
+    let mut dispatcher = EventDispatcher::<Event>::default();
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
@@ -248,10 +245,8 @@ fn stop_propagation_on_sync_dispatcher() {
 
     let mut dispatcher = EventDispatcher::<Event>::default();
 
-    {
-        dispatcher.add_listener(Event::VariantA, &listener_a);
-        dispatcher.add_listener(Event::VariantA, &listener_b);
-    }
+    dispatcher.add_listener(Event::VariantA, &listener_a);
+    dispatcher.add_listener(Event::VariantA, &listener_b);
 
     dispatcher.dispatch_event(&Event::VariantA);
     let a_has_been_dispatched = listener_a.try_lock().unwrap().has_been_dispatched;
@@ -287,36 +282,28 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
     dispatcher.add_listener(Event::VariantA, &listener_a);
     dispatcher.add_listener(Event::VariantA, &listener_b);
 
-    {
-        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
-        assert_eq!(counter_a, 0);
-        assert_eq!(counter_b, 0);
-    }
+    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    assert_eq!(counter_a, 0);
+    assert_eq!(counter_b, 0);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    {
-        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
-        assert_eq!(counter_a, 1);
-        assert_eq!(counter_b, 0);
-    }
+    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    assert_eq!(counter_a, 1);
+    assert_eq!(counter_b, 0);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    {
-        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
-        assert_eq!(counter_a, 1);
-        assert_eq!(counter_b, 1);
-    }
+    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    assert_eq!(counter_a, 1);
+    assert_eq!(counter_b, 1);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    {
-        let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-        let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
-        assert_eq!(counter_a, 1);
-        assert_eq!(counter_b, 1);
-    }
+    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    assert_eq!(counter_a, 1);
+    assert_eq!(counter_b, 1);
 }
 
 #[test]
@@ -343,26 +330,20 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
         Some(SyncDispatcherRequest::StopListening)
     });
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 0);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 2);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 2);
 
-    {
-        dispatcher.dispatch_event(&Event::VariantA);
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 2);
-    }
+    dispatcher.dispatch_event(&Event::VariantA);
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 2);
 }
 
 #[test]
@@ -389,26 +370,20 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
         Some(SyncDispatcherRequest::StopPropagation)
     });
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 0);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 1);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 1);
 
-    {
-        dispatcher.dispatch_event(&Event::VariantA);
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 2);
-    }
+    dispatcher.dispatch_event(&Event::VariantA);
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 2);
 }
 
 #[test]
@@ -435,30 +410,22 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
         Some(SyncDispatcherRequest::StopListeningAndPropagation)
     });
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 0);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    {
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 1);
-    }
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 1);
 
-    {
-        dispatcher.dispatch_event(&Event::VariantA);
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 2);
-    }
+    dispatcher.dispatch_event(&Event::VariantA);
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 2);
 
-    {
-        dispatcher.dispatch_event(&Event::VariantA);
-        let counter = listener.try_lock().unwrap().use_counter;
-        assert_eq!(counter, 2);
-    }
+    dispatcher.dispatch_event(&Event::VariantA);
+    let counter = listener.try_lock().unwrap().use_counter;
+    assert_eq!(counter, 2);
 }

@@ -62,18 +62,14 @@ fn listeners_dispatch_in_correct_order() {
     }));
 
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
-
-    {
-        dispatcher.add_listener(Event::EventType, &last_receiver_a, 3);
-        dispatcher.add_listener(Event::EventType, &last_receiver_b, 3);
-        dispatcher.add_listener(Event::EventType, &second_receiver_a, 2);
-        dispatcher.add_listener(Event::EventType, &first_receiver_a, 1);
-        dispatcher.add_listener(Event::EventType, &first_receiver_b, 1);
-        dispatcher.add_listener(Event::EventType, &second_receiver_b, 2);
-    }
+    dispatcher.add_listener(Event::EventType, &last_receiver_a, 3);
+    dispatcher.add_listener(Event::EventType, &last_receiver_b, 3);
+    dispatcher.add_listener(Event::EventType, &second_receiver_a, 2);
+    dispatcher.add_listener(Event::EventType, &first_receiver_a, 1);
+    dispatcher.add_listener(Event::EventType, &first_receiver_b, 1);
+    dispatcher.add_listener(Event::EventType, &second_receiver_b, 2);
 
     dispatcher.dispatch_event(&Event::EventType);
-
     let names_record = names_record.try_lock().unwrap();
 
     assert_eq!(names_record[0], "1");
@@ -100,10 +96,7 @@ fn stop_listening() {
 
     let receiver = Arc::new(Mutex::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
-
-    {
-        dispatcher.add_listener(Event::EventType, &receiver, 0);
-    }
+    dispatcher.add_listener(Event::EventType, &receiver, 0);
 
     dispatcher.dispatch_event(&Event::EventType);
     dispatcher.dispatch_event(&Event::EventType);
@@ -229,6 +222,7 @@ fn stop_listening_and_propagation_of_fns() {
         First,
         Second,
     }
+
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
     let visitor_record: Arc<Mutex<Vec<ClosureVisitor>>> = Arc::new(Mutex::new(Vec::new()));
 
