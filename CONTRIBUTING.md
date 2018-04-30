@@ -6,14 +6,15 @@
 
 Contributions to `Hey_Listen` should be made via pull requests.
 Issues display development-plans or required brainstorming, feel free to ask, suggest, and discuss!
+The `Master`-branch contains the latest release.
 
 ## Pull Request Checklist
 
-- If you want to work on an issue, check if you are working on the right branch. Some issues have milestones assigned, each milestone represents a version and each version owns a branch.
+- If a pull requests breaks the current API, use the `unstable-changes`-branch, otherwise `stable-changes`.
 
-- Commits shall be as small as possible, compile and pass all tests.
+- Commits shall be as small as possible, compile, and pass all tests.
 
-- Make sure your code is formatted as `rustfmt` would format it, unless `rustfmt` goes _crazy_ and dismembers everything :' )
+- Make sure your code is formatted with `rustfmt` would format it, unless `rustfmt` goes _crazy_ and dismembers everything :' )
 
 - If you fixed a bug, add a test for that bug. Unit-Tests belong inside same file's `mod` named `tests`, integrational tests belong inside the `tests`-folder.
 
