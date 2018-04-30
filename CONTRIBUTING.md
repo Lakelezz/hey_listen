@@ -6,7 +6,7 @@
 
 Contributions to `Hey_Listen` should be made via pull requests.
 Issues display development-plans or required brainstorming, feel free to ask, suggest, and discuss!
-The `Master`-branch contains the latest release.
+The `master`-branch contains the latest release.
 
 ## Pull Request Checklist
 
