@@ -6,7 +6,7 @@
 
 Covering synchronous, parallel, and sync-prioritised dispatching to Closures, Enums, Structs, and every other type supporting `trait`-implementation.
 
-View the [examples] on how to use each dispatcher.
+View the `examples`-folder on how to use each dispatcher.
 
 Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTING.md) for further guidance.
 
@@ -68,4 +68,3 @@ extern crate parking_lot;
 [ci]: https://travis-ci.org/Lakelezz/hey_listen
 [docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.2.0
 [docs]: https://docs.rs/hey_listen
-[examples]: https://github.com/Lakelezz/hey_listen/tree/master/examples
