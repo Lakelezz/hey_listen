@@ -67,7 +67,7 @@ fn dispatch_parallel_to_functions() {
     let counter_b = Arc::new(Mutex::new(DispatchCounter::default()));
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter_a));
-    let closure_a = Arc::new(move |_event: &Event| {
+    let closure_a = Box::new(move |_event: &Event| {
         let listener = &weak_counter_ref.upgrade().unwrap();
         listener.try_lock().unwrap().counter += 1;
 
@@ -75,7 +75,7 @@ fn dispatch_parallel_to_functions() {
     });
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter_b));
-    let closure_b = Arc::new(move |_event: &Event| {
+    let closure_b = Box::new(move |_event: &Event| {
         let listener = &weak_counter_ref.upgrade().unwrap();
         listener.try_lock().unwrap().counter += 1;
 
@@ -162,7 +162,7 @@ fn stop_listening_parallel_for_fns() {
     let counter_b = Arc::new(Mutex::new(DispatchCounter::default()));
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter_a));
-    let closure_a = Arc::new(move |_event: &Event| {
+    let closure_a = Box::new(move |_event: &Event| {
         let listener = &weak_counter_ref.upgrade().unwrap();
         listener.try_lock().unwrap().counter += 1;
 
@@ -170,7 +170,7 @@ fn stop_listening_parallel_for_fns() {
     });
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter_b));
-    let closure_b = Arc::new(move |_event: &Event| {
+    let closure_b = Box::new(move |_event: &Event| {
         let listener = &weak_counter_ref.upgrade().unwrap();
         listener.try_lock().unwrap().counter += 1;
 

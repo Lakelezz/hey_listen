@@ -74,7 +74,7 @@ type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
 type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
-type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
+type ParallelEventFunction<T> = Vec<Box<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// A request will be processed by the event-dispatcher depending on the variant:
@@ -914,7 +914,7 @@ where
     ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
-    ///     let closure = Arc::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
+    ///     let closure = Box::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
     ///             listener.lock().test_method(&event);
     ///             None
@@ -934,7 +934,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>,
+        function: Box<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
