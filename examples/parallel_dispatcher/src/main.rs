@@ -55,7 +55,7 @@ fn main() {
     let listener_c = Arc::new(Mutex::new(ListenerStruct { number: 2 }));
 
     // Our closure gets its unique own number as well.
-    let closure_a = Arc::new(move |_event: &Event| {
+    let closure_a = Box::new(move |_event: &Event| {
         println!("3");
 
         // As we did in the `ParallelListener`-implementation:
