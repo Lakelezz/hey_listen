@@ -429,3 +429,9 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     let counter = listener.try_lock().unwrap().use_counter;
     assert_eq!(counter, 2);
 }
+
+#[test]
+fn is_send_and_sync() {
+    fn assert_send<T : Send + Sync>(_ : &T) { };
+    assert_send(&EventDispatcher::<Event>::default());
+}

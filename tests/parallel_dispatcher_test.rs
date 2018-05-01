@@ -200,3 +200,9 @@ fn stop_listening_parallel_for_fns() {
     assert_eq!(counter_a.try_lock().unwrap().counter, 3);
     assert_eq!(counter_b.try_lock().unwrap().counter, 2);
 }
+
+#[test]
+fn is_send_and_sync() {
+    fn assert_send<T : Send + Sync>(_ : &T) { };
+    assert_send(&ParallelEventDispatcher::<Event>::default());
+}
