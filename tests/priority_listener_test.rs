@@ -258,6 +258,6 @@ fn stop_listening_and_propagation_of_fns() {
 
 #[test]
 fn is_send_and_sync() {
-    fn assert_send<T : Send + Sync>(_ : &T) { };
+    fn assert_send<T: Send + Sync>(_: &T) {};
     assert_send(&PriorityEventDispatcher::<u32, Event>::default());
 }

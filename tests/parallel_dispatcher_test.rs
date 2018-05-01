@@ -203,6 +203,6 @@ fn stop_listening_parallel_for_fns() {
 
 #[test]
 fn is_send_and_sync() {
-    fn assert_send<T : Send + Sync>(_ : &T) { };
+    fn assert_send<T: Send + Sync>(_: &T) {};
     assert_send(&ParallelEventDispatcher::<Event>::default());
 }

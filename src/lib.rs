@@ -181,7 +181,9 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>) -> Self {
+    fn new_with_traits(
+        trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+    ) -> Self {
         FnsAndTraits {
             traits: trait_objects,
             fns: vec![],
@@ -359,7 +361,9 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![
-                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
+                Arc::downgrade(
+                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                ),
             ]),
         );
     }
@@ -601,7 +605,9 @@ where
             prioritised_listener_collection.insert(
                 priority.clone(),
                 FnsAndTraits::new_with_traits(vec![
-                    Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
+                    Arc::downgrade(
+                        &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                    ),
                 ]),
             );
             return;
@@ -611,7 +617,9 @@ where
         b_tree_map.insert(
             priority,
             FnsAndTraits::new_with_traits(vec![
-                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
+                Arc::downgrade(
+                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                ),
             ]),
         );
         self.events.insert(event_identifier, b_tree_map);
