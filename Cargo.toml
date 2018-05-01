@@ -13,12 +13,12 @@ build = "build.rs"
 
 [dependencies]
 rayon = "^1.0"
-parking_lot = "^0.5.4"
-failure = "^0.1.1"
-failure_derive = "^0.1.1"
+parking_lot = "^0.5"
+failure = "^0.1"
+failure_derive = "^0.1"
 
 [build-dependencies]
-skeptic = "0.13"
+skeptic = "^0.13"
 
 [dev-dependencies]
-skeptic = "0.13"
+skeptic = "^0.13"
