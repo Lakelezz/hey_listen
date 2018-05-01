@@ -72,7 +72,7 @@ use rayon::{join, ThreadPool,
 
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
-type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest>>>;
+type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
 type ParallelEventFunction<T> = Vec<Arc<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
@@ -173,7 +173,7 @@ struct FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<Listener<T>>>>,
+    traits: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
     fns: EventFunction<T>,
 }
 
@@ -181,7 +181,7 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T>>>>) -> Self {
+    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>) -> Self {
         FnsAndTraits {
             traits: trait_objects,
             fns: vec![],
@@ -343,14 +343,14 @@ where
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`HashMap`]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
-    pub fn add_listener<D: Listener<T> + Sync + Sync + 'static>(
+    pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(
         &mut self,
         event_identifier: T,
         listener: &Arc<Mutex<D>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<Listener<T>>>),
+                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -359,7 +359,7 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![
-                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
             ]),
         );
     }
@@ -424,7 +424,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync + 'static>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
@@ -593,7 +593,7 @@ where
                 prioritised_listener_collection.get_mut(&priority)
             {
                 priority_level_collection.traits.push(Arc::downgrade(
-                    &(Arc::clone(listener) as Arc<Mutex<Listener<T>>>),
+                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
                 ));
 
                 return;
@@ -601,7 +601,7 @@ where
             prioritised_listener_collection.insert(
                 priority.clone(),
                 FnsAndTraits::new_with_traits(vec![
-                    Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+                    Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
                 ]),
             );
             return;
@@ -611,7 +611,7 @@ where
         b_tree_map.insert(
             priority,
             FnsAndTraits::new_with_traits(vec![
-                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T>>>)),
+                Arc::downgrade(&(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>)),
             ]),
         );
         self.events.insert(event_identifier, b_tree_map);
@@ -674,7 +674,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<SyncDispatcherRequest>>,
+        function: Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>,
         priority: P,
     ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
