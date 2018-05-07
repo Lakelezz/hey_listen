@@ -93,7 +93,7 @@ pub enum SyncDispatcherRequest {
     StopListeningAndPropagation,
 }
 
-/// An `enum` returning a request from a [`Listener`] to its `async` event-dispatcher.
+/// An `enum` returning a request from a [`Listener`] to its parallel event-dispatcher.
 ///
 /// `StopListening` will remove your [`Listener`] from the
 /// event-dispatcher.
