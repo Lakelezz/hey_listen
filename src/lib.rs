@@ -252,8 +252,9 @@ where
     fn on_event(&mut self, event: &T) -> Option<ParallelDispatcherRequest>;
 }
 
-/// Owns a map of all listened event-variants,
-/// [`Weak`]-references to their listeners and [`Fn`]s.
+/// In charge of sync dispatching to all listeners.
+/// Owns a map event-variants and
+/// [`Weak`]-references to their listeners and/or owns [`Fn`]s.
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
@@ -479,8 +480,9 @@ where
     }
 }
 
-/// Owns a map of all listened event-variants,
-/// [`Weak`]-references to their listeners and [`Fn`]s.
+/// In charge of prioritised sync dispatching to all listeners.
+/// Owns a map event-variants and [`Weak`]-references to their
+/// listeners and/or owns [`Fn`]s.
 /// Opposed to [`EventListener`], this structure utilises one [`BTreeMap`] per
 /// event-type to order listeners by a given priority-level.
 ///
@@ -759,8 +761,9 @@ pub enum BuildError {
     NumThreads(String),
 }
 
-/// Owns a map of all listened event-variants,
-/// [`Weak`]-references to their listeners and [`Fn`]s.
+/// In charge of parallel dispatching to all listeners.
+/// Owns a map event-variants and [`Weak`]-references to their listeners
+/// and/or owns [`Fn`]s.
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
