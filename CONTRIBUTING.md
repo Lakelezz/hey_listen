@@ -10,7 +10,7 @@ The `master`-branch contains the latest release.
 
 ## Pull Request Checklist
 
-- If a pull requests breaks the current API, use the `unstable-changes`-branch, otherwise `stable-changes`.
+- If a pull requests breaks the current API, use the `breaking-changes`-branch, otherwise `stable-changes`.
 
 - Commits shall be as small as possible, compile, and pass all tests.
 
