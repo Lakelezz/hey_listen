@@ -18,7 +18,6 @@
 //!
 //! ```rust,ignore
 //! extern crate hey_listen;
-//! extern crate parking_lot;
 //! ```
 //!
 //! # Example
@@ -26,11 +25,9 @@
 //!
 //! ```rust
 //! extern crate hey_listen;
-//! extern crate parking_lot;
 //!
-//! use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
+//! use hey_listen::{Listener, EventDispatcher, Mutex, SyncDispatcherRequest};
 //! use std::sync::Arc;
-//! use parking_lot::Mutex;
 //!
 //! #[derive(Clone, Eq, Hash, PartialEq)]
 //! enum Event {
@@ -66,7 +63,9 @@ mod parallel;
 mod sync;
 
 pub use self::{
-    parallel::{dispatcher::ParallelEventDispatcher, ParallelDispatcherRequest, ParallelListener},
+    parallel::{
+        dispatcher::ParallelEventDispatcher, ParallelDispatcherRequest, ParallelListener,
+    },
     sync::{
         dispatcher::EventDispatcher, priority_dispatcher::PriorityEventDispatcher, Listener,
         SyncDispatcherRequest,

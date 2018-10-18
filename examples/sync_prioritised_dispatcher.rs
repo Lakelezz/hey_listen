@@ -11,11 +11,8 @@
 //! closures can also become a listener.
 
 extern crate hey_listen;
-// `hey_listen` uses parking_lot's `Mutex` instead of `std::sync::Mutex`.
-extern crate parking_lot;
 
-use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
-use parking_lot::Mutex;
+use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::{
     hash::{Hash, Hasher},
     mem::discriminant,

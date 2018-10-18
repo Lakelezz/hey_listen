@@ -1,7 +1,9 @@
-use parking_lot::Mutex;
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::sync::Weak;
+use std::{
+    collections::HashMap,
+    hash::Hash,
+    sync::Weak,
+};
+use super::Mutex;
 
 pub mod dispatcher;
 pub mod priority_dispatcher;

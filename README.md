@@ -16,11 +16,9 @@ Here is a quick example on how to use the event-dispatcher:
 
 ```rust
 extern crate hey_listen;
-extern crate parking_lot;
 
-use hey_listen::{EventDispatcher, Listener, SyncDispatcherRequest};
+use hey_listen::{EventDispatcher, Listener, Mutex, SyncDispatcherRequest};
 use std::sync::Arc;
-use parking_lot::Mutex;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 enum Event {
@@ -61,7 +59,6 @@ and this to your crate's root:
 
 ```rust,ignore
 extern crate hey_listen;
-extern crate parking_lot;
 ```
 
 [ci-badge]: https://img.shields.io/travis/Lakelezz/hey_listen.svg?style=flat-square&colorB=3fb732

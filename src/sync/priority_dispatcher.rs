@@ -1,12 +1,12 @@
 use super::{
-    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Listener,
+    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Mutex, Listener,
     SyncDispatcherRequest,
 };
-use parking_lot::Mutex;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::sync::{Arc, Weak};
+use std::{
+    collections::{BTreeMap, HashMap},
+    hash::Hash,
+    sync::{Arc, Weak},
+};
 
 type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
 
@@ -63,10 +63,9 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
-    /// use std::sync::Arc;
     ///
-    /// use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use std::sync::Arc;
+    /// use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -80,7 +79,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
+    ///     let listener = Arc::new(Mutex::new(ListenerStruct {}));
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener, 1);
@@ -163,11 +162,9 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
     ///
-    /// use hey_listen::{PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
     /// use std::sync::Arc;
-    /// use parking_lot::Mutex;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {

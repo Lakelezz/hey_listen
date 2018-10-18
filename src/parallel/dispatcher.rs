@@ -52,12 +52,8 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
     /// use std::sync::Arc;
-    ///
-    /// use hey_listen::ParallelListener;
-    /// use hey_listen::ParallelEventDispatcher;
-    /// use hey_listen::ParallelDispatcherRequest;
+    /// use hey_listen::{Mutex, ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -71,7 +67,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
+    ///     let listener = Arc::new(Mutex::new(ListenerStruct {}));
     ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
@@ -140,15 +136,12 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
     /// extern crate failure;
     /// #[macro_use]
     /// extern crate failure_derive;
     ///
-    /// use hey_listen::ParallelEventDispatcher;
-    /// use hey_listen::ParallelDispatcherRequest;
+    /// use hey_listen::{Mutex, ParallelEventDispatcher, ParallelDispatcherRequest};
     /// use std::sync::Arc;
-    /// use parking_lot::Mutex;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {

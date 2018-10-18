@@ -1,8 +1,6 @@
 extern crate hey_listen;
-extern crate parking_lot;
 
-use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
-use parking_lot::Mutex;
+use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]

@@ -1,9 +1,7 @@
 use super::{
-    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, SyncDispatcherRequest,
+    execute_sync_dispatcher_requests, FnsAndTraits, Mutex, Listener, ListenerMap, SyncDispatcherRequest,
 };
-use parking_lot::Mutex;
-use std::hash::Hash;
-use std::sync::{Arc, Weak};
+use std::{ sync::{Arc, Weak}, hash::Hash};
 
 /// In charge of sync dispatching to all listeners.
 /// Owns a map event-variants and
@@ -46,10 +44,9 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::{Listener, EventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{Listener, EventDispatcher, Mutex, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -63,7 +60,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(parking_lot::Mutex::new(ListenerStruct {}));
+    ///     let listener = Arc::new(Mutex::new(ListenerStruct {}));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
@@ -132,12 +129,9 @@ where
     ///
     /// ```rust
     /// extern crate hey_listen;
-    /// extern crate parking_lot;
     ///
-    /// use hey_listen::EventDispatcher;
-    /// use hey_listen::SyncDispatcherRequest;
+    /// use hey_listen::{EventDispatcher, Mutex, SyncDispatcherRequest};
     /// use std::sync::Arc;
-    /// use parking_lot::Mutex;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
