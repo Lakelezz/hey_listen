@@ -10,7 +10,6 @@
 //! closures can also become a listener.
 
 extern crate hey_listen;
-// `hey_listen` uses parking_lot's `Mutex` instead of `std::sync::Mutex`.
 
 use hey_listen::{Mutex, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
 use std::sync::Arc;
