@@ -16,8 +16,8 @@ extern crate hey_listen;
 extern crate parking_lot;
 
 use hey_listen::{EventDispatcher, Listener, SyncDispatcherRequest};
-use std::sync::Arc;
 use parking_lot::Mutex;
+use std::sync::Arc;
 
 // This is our event-enum, it will represent possible events
 // a single event-dispatcher can dispatch.

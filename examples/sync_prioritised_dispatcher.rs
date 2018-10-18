@@ -14,9 +14,13 @@ extern crate hey_listen;
 // `hey_listen` uses parking_lot's `Mutex` instead of `std::sync::Mutex`.
 extern crate parking_lot;
 
-use hey_listen::{PriorityEventDispatcher, Listener, SyncDispatcherRequest};
-use std::{hash::{Hash, Hasher}, mem::discriminant, sync::Arc};
+use hey_listen::{Listener, PriorityEventDispatcher, SyncDispatcherRequest};
 use parking_lot::Mutex;
+use std::{
+    hash::{Hash, Hasher},
+    mem::discriminant,
+    sync::Arc,
+};
 
 // This is our event-enum, it will represent possible events a single
 // event-dispatcher can dispatch.
@@ -50,7 +54,9 @@ impl Listener<EventEnum> for ListenerStruct {
         // Be aware, the event is immutable.
 
         match *event {
-            EventEnum::EventVariant(value) => println!("I'm listening and received event with value: {}.", value),
+            EventEnum::EventVariant(value) => {
+                println!("I'm listening and received event with value: {}.", value)
+            }
         }
 
         // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
@@ -72,7 +78,8 @@ fn main() {
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.
-    let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> = PriorityEventDispatcher::default();
+    let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> =
+        PriorityEventDispatcher::default();
 
     // Start listening to a listener and decide their dispatch-priority, here level `1`.
     // The value we give `EventVariant` is not important for adding a listener,

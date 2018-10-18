@@ -2,9 +2,9 @@ extern crate hey_listen;
 extern crate parking_lot;
 
 use hey_listen::{EventDispatcher, Listener, SyncDispatcherRequest};
-use std::sync::Arc;
-use std::ops::Deref;
 use parking_lot::Mutex;
+use std::ops::Deref;
+use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 enum Event {
