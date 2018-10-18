@@ -1,4 +1,4 @@
-[![ci-badge][]][ci] [![docs-badge][]][docs]
+[![ci-badge][]][ci] [![docs-badge][]][docs] [![rust 1.25+ badge]][rust 1.25+ link] [![crates.io version]][crates.io link]
 
 # Hey! Listen!
 
@@ -64,7 +64,14 @@ extern crate hey_listen;
 extern crate parking_lot;
 ```
 
-[ci-badge]: https://travis-ci.org/Lakelezz/hey_listen.svg?branch=master
+[ci-badge]: https://img.shields.io/travis/Lakelezz/hey_listen.svg?style=flat-square&colorB=3fb732
 [ci]: https://travis-ci.org/Lakelezz/hey_listen
-[docs-badge]: https://docs.rs/hey_listen/badge.svg?version=0.2.0
+
+[docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square&colorB=32b6b7
 [docs]: https://docs.rs/hey_listen
+
+[rust 1.25+ badge]: https://img.shields.io/badge/rust-1.25+-93450a.svg?style=flat-square&colorB=ff9a0d
+[rust 1.25+ link]: https://blog.rust-lang.org/2018/03/29/Rust-1.25.html
+
+[crates.io link]: https://crates.io/crates/hey_listen
+[crates.io version]: https://img.shields.io/crates/v/hey_listen.svg?style=flat-square&colorB=b73732
