@@ -58,13 +58,12 @@ extern crate failure_derive;
 extern crate parking_lot;
 extern crate rayon;
 
-mod parallel;
-mod sync;
+pub mod parallel;
+pub mod rc;
+pub mod sync;
 
 pub use self::{
-    parallel::{
-        dispatcher::ParallelEventDispatcher, ParallelDispatcherRequest, ParallelListener,
-    },
+    parallel::{dispatcher::ParallelEventDispatcher, ParallelDispatcherRequest, ParallelListener},
     sync::{
         dispatcher::EventDispatcher, priority_dispatcher::PriorityEventDispatcher, Listener,
         SyncDispatcherRequest,
