@@ -1,6 +1,6 @@
 [package]
 name = "hey_listen"
-version = "0.2.0"
+version = "0.2.1"
 license = "ISC"
 keywords = ["event", "dispatcher", "listener", "emitter", "parallel"]
 categories = ["concurrency"]
@@ -12,13 +12,16 @@ authors = ["Lakelezz <lakelezz@protonmail.ch>"]
 build = "build.rs"
 
 [dependencies]
-rayon = "^1.0"
-parking_lot = "^0.5"
-failure = "^0.1"
-failure_derive = "^0.1"
+rayon = "1.0"
+failure = "0.1"
+failure_derive = "0.1"
+
+[dependencies.parking_lot]
+version = "0.5"
 
 [build-dependencies]
-skeptic = "^0.13"
+skeptic = "0.13"
 
 [dev-dependencies]
-skeptic = "^0.13"
+skeptic = "0.13"
+
