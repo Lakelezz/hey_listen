@@ -1,7 +1,11 @@
 use super::{
-    execute_sync_dispatcher_requests, FnsAndTraits, Mutex, Listener, ListenerMap, SyncDispatcherRequest,
+    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, Mutex,
+    SyncDispatcherRequest,
 };
-use std::{ sync::{Arc, Weak}, hash::Hash};
+use std::{
+    hash::Hash,
+    sync::{Arc, Weak},
+};
 
 /// In charge of sync dispatching to all listeners.
 /// Owns a map event-variants and
