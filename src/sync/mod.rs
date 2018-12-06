@@ -1,9 +1,5 @@
-use std::{
-    collections::HashMap,
-    hash::Hash,
-    sync::Weak,
-};
 use super::Mutex;
+use std::{collections::HashMap, hash::Hash, sync::Weak};
 
 pub mod dispatcher;
 pub mod priority_dispatcher;
@@ -42,7 +38,7 @@ pub(crate) enum ExecuteRequestsResult {
 /// `T` being the type you use for events, e.g. an `Enum`.
 pub trait Listener<T>
 where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+    T: PartialEq + Eq + Hash + Clone + 'static,
 {
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
