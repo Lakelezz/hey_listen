@@ -1,5 +1,5 @@
 use super::{
-    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Mutex, Listener,
+    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Listener, Mutex,
     SyncDispatcherRequest,
 };
 use std::{
