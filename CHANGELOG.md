@@ -6,8 +6,8 @@ Covering up all the changes!
 
 This release adds `std::rc::Rc`-alternatives for dispatchers that do not require to be `Send` and `Sync`.\
 Furthermore, `hey_listen` is now refactored into two modules:
- * `rc`: dispatchers using `std::rc::Rc`,
- * `sync`: dispatchers using `std::sync::Arc`,
+ * `rc`: dispatchers using `std::rc::Rc`.
+ * `sync`: dispatchers using `std::sync::Arc`.
 
 Nonetheless, we re-import everything into the crate's root securing stability.
 
