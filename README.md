@@ -2,9 +2,13 @@
 
 # Hey! Listen!
 
-`Hey_listen` is a collection of event-dispatchers aiming to suit all needs!
+`Hey_listen` is a collection of event-dispatchers aiming to suit all needs!\
+Currently covering:
+* Synchronous dispatcher
+* Priority dispatcher
+* Threadpool dispatcher
 
-Covering synchronous, parallel, and sync-prioritised dispatching to Closures, Enums, Structs, and every other type supporting `trait`-implementation.
+Whenever applicable, dispatchers have an `Rc` and `Arc` variant.
 
 View the `examples`-folder on how to use each dispatcher.
 
@@ -22,7 +26,7 @@ use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 enum Event {
-    EventVariant,
+    Variant,
 }
 
 struct ListenerStruct {}
@@ -37,10 +41,10 @@ impl Listener<Event> for ListenerStruct {
 
 fn main() {
     let listener = Arc::new(Mutex::new(ListenerStruct {}));
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher = EventDispatcher::<Event>::default();
 
-    dispatcher.add_listener(Event::EventVariant, &listener);
-    dispatcher.dispatch_event(&Event::EventVariant);
+    dispatcher.add_listener(Event::Variant, &listener);
+    dispatcher.dispatch_event(&Event::Variant);
 }
 
 ```
@@ -51,10 +55,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hey_listen = "0.2.0"
+hey_listen = "0.2"
 ```
 
-and this to your crate's root:
+and this to your crate's root (not needed in Rust 2018):
 
 ```rust,ignore
 extern crate hey_listen;
