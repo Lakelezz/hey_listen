@@ -1,4 +1,4 @@
-pub use super::{Listener, SyncDispatcherRequest};
+pub use super::{sync::SyncDispatcherRequest, Listener};
 use std::{collections::HashMap, hash::Hash, rc::Weak};
 
 use super::Mutex;

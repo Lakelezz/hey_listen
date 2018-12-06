@@ -58,15 +58,12 @@ extern crate failure_derive;
 extern crate parking_lot;
 extern crate rayon;
 
-pub mod parallel;
 pub mod rc;
 pub mod sync;
 
-pub use self::{
-    parallel::{dispatcher::ParallelEventDispatcher, ParallelDispatcherRequest, ParallelListener},
-    sync::{
-        dispatcher::EventDispatcher, priority_dispatcher::PriorityEventDispatcher, Listener,
-        SyncDispatcherRequest,
-    },
+pub use self::sync::{
+    dispatcher::EventDispatcher, parallel_dispatcher::ParallelEventDispatcher,
+    priority_dispatcher::PriorityEventDispatcher, Listener, ParallelDispatcherRequest,
+    ParallelListener, SyncDispatcherRequest,
 };
 pub use parking_lot::Mutex;

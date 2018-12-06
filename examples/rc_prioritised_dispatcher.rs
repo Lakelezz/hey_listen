@@ -12,7 +12,9 @@
 
 extern crate hey_listen;
 
-use hey_listen::{Listener, Mutex, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
+use hey_listen::{
+    rc::priority_dispatcher::PriorityEventDispatcher, Listener, Mutex, SyncDispatcherRequest,
+};
 use std::{
     hash::{Hash, Hasher},
     mem::discriminant,
