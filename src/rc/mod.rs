@@ -5,7 +5,7 @@ use super::Mutex;
 pub mod dispatcher;
 pub mod priority_dispatcher;
 
-type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest>>>;
+type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest>>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 
 /// When `execute_sync_dispatcher_requests` returns,
@@ -73,7 +73,7 @@ struct FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    traits: Vec<Weak<Mutex<Listener<T> + 'static>>>,
+    traits: Vec<Weak<Mutex<dyn Listener<T> + 'static>>>,
     fns: EventFunction<T>,
 }
 
@@ -81,7 +81,7 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    fn new_with_traits(trait_objects: Vec<Weak<Mutex<Listener<T> + 'static>>>) -> Self {
+    fn new_with_traits(trait_objects: Vec<Weak<Mutex<dyn Listener<T> + 'static>>>) -> Self {
         FnsAndTraits {
             traits: trait_objects,
             fns: vec![],

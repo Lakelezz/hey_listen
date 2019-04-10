@@ -1,4 +1,4 @@
-extern crate hey_listen;
+
 
 use hey_listen::{Mutex, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
 use std::sync::Arc;

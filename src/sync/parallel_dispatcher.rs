@@ -110,7 +110,7 @@ where
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -119,7 +119,7 @@ where
         self.events.insert(
             event_identifier,
             ParallelFnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>),
             )]),
         );
     }
@@ -183,7 +183,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>,
+        function: Box<dyn Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);
@@ -230,8 +230,8 @@ where
     /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
-            let mut fns_to_remove = Mutex::new(Vec::new());
-            let mut traits_to_remove = Mutex::new(Vec::new());
+            let fns_to_remove = Mutex::new(Vec::new());
+            let traits_to_remove = Mutex::new(Vec::new());
 
             if let Some(ref thread_pool) = self.thread_pool {
                 thread_pool.install(|| {

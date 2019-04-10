@@ -128,7 +128,7 @@ where
                 prioritised_listener_collection.get_mut(&priority)
             {
                 priority_level_collection.traits.push(Arc::downgrade(
-                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                    &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
                 ));
 
                 return;
@@ -136,7 +136,7 @@ where
             prioritised_listener_collection.insert(
                 priority.clone(),
                 FnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                    &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                    &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
                 )]),
             );
             return;
@@ -146,7 +146,7 @@ where
         b_tree_map.insert(
             priority,
             FnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
             )]),
         );
         self.events.insert(event_identifier, b_tree_map);
@@ -207,7 +207,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>,
+        function: Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>,
         priority: P,
     ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {

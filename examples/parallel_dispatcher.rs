@@ -9,7 +9,7 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-extern crate hey_listen;
+
 
 use hey_listen::{Mutex, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
 use std::sync::Arc;

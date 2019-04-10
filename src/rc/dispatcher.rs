@@ -107,7 +107,7 @@ where
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Rc::downgrade(
-                &(Rc::clone(listener) as Rc<Mutex<Listener<T> + 'static>>),
+                &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
             ));
 
             return;
@@ -116,7 +116,7 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                &(Rc::clone(listener) as Rc<Mutex<Listener<T> + 'static>>),
+                &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
             )]),
         );
     }
@@ -178,7 +178,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<SyncDispatcherRequest> + 'static>,
+        function: Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + 'static>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);

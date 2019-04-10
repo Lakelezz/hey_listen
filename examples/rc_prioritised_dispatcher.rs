@@ -10,8 +10,6 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-extern crate hey_listen;
-
 use hey_listen::{
     rc::priority_dispatcher::PriorityEventDispatcher, Listener, Mutex, SyncDispatcherRequest,
 };

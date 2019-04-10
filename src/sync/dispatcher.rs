@@ -107,7 +107,7 @@ where
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -116,7 +116,7 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
             )]),
         );
     }
@@ -178,7 +178,7 @@ where
     pub fn add_fn(
         &mut self,
         event_identifier: T,
-        function: Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync + 'static>,
+        function: Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync + 'static>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.fns.push(function);

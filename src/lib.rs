@@ -52,11 +52,7 @@
 //!
 //! ```
 //! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
-extern crate parking_lot;
-extern crate rayon;
+use failure;
 
 pub mod rc;
 pub mod sync;

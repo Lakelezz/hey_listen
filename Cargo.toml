@@ -10,6 +10,7 @@ documentation = "https://docs.rs/hey_listen"
 repository = "https://github.com/lakelezz/hey_listen.git"
 authors = ["Lakelezz <lakelezz@protonmail.ch>"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 rayon = "1.0"

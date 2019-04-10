@@ -1,16 +1,17 @@
 use super::Mutex;
 use rayon::ThreadPool;
 use std::{collections::HashMap, hash::Hash, sync::Weak};
+use failure_derive::Fail;
 
 pub mod dispatcher;
 pub mod parallel_dispatcher;
 pub mod priority_dispatcher;
 
-type EventFunction<T> = Vec<Box<Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
+type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
-type ParallelEventFunction<T> = Vec<Box<Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
+type ParallelEventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.
@@ -107,7 +108,7 @@ struct FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+    traits: Vec<Weak<Mutex<dyn Listener<T> + Send + Sync + 'static>>>,
     fns: EventFunction<T>,
 }
 
@@ -116,7 +117,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     fn new_with_traits(
-        trait_objects: Vec<Weak<Mutex<Listener<T> + Send + Sync + 'static>>>,
+        trait_objects: Vec<Weak<Mutex<dyn Listener<T> + Send + Sync + 'static>>>,
     ) -> Self {
         FnsAndTraits {
             traits: trait_objects,
@@ -203,7 +204,7 @@ struct ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<ParallelListener<T> + Send + Sync + 'static>>>,
+    traits: Vec<Weak<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>>,
     fns: ParallelEventFunction<T>,
 }
 
@@ -212,7 +213,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     fn new_with_traits(
-        trait_objects: Vec<Weak<Mutex<ParallelListener<T> + Send + Sync + 'static>>>,
+        trait_objects: Vec<Weak<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>>,
     ) -> Self {
         ParallelFnsAndTraits {
             traits: trait_objects,

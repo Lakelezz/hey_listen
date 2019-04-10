@@ -1,5 +1,3 @@
-extern crate hey_listen;
-
 use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::sync::Arc;
 
