@@ -51,7 +51,6 @@ where
     /// Adding a [`ParallelListener`] to the dispatcher:
     ///
     /// ```rust
-    /// extern crate hey_listen;
     /// use std::sync::Arc;
     /// use hey_listen::{Mutex, ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest};
     ///
@@ -135,10 +134,7 @@ where
     /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// extern crate hey_listen;
-    /// extern crate failure;
-    /// #[macro_use]
-    /// extern crate failure_derive;
+    /// use failure_derive::Fail;
     ///
     /// use hey_listen::{Mutex, ParallelEventDispatcher, ParallelDispatcherRequest};
     /// use std::sync::Arc;

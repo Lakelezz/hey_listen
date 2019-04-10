@@ -19,8 +19,6 @@ Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTIN
 Here is a quick example on how to use the event-dispatcher:
 
 ```rust
-extern crate hey_listen;
-
 use hey_listen::{EventDispatcher, Listener, Mutex, SyncDispatcherRequest};
 use std::sync::Arc;
 
@@ -56,12 +54,6 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 hey_listen = "0.2"
-```
-
-and this to your crate's root (not needed in Rust 2018):
-
-```rust,ignore
-extern crate hey_listen;
 ```
 
 [ci-badge]: https://img.shields.io/azure-devops/build/lakeware/1942ff94-1b1e-4422-be98-1cd4696568d1/7/breaking-changes.svg?style=flat-square

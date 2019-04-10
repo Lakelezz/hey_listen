@@ -13,18 +13,10 @@
 //! hey_listen = "0.2.0"
 //! ```
 //!
-//! and this to your crate's root:
-//!
-//! ```rust,ignore
-//! extern crate hey_listen;
-//! ```
-//!
 //! # Example
 //! Here is a quick example on how to use the sync event-dispatcher:
 //!
 //! ```rust
-//! extern crate hey_listen;
-//!
 //! use hey_listen::{Listener, EventDispatcher, Mutex, SyncDispatcherRequest};
 //! use std::sync::Arc;
 //!

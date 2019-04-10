@@ -47,8 +47,6 @@ where
     /// Adding a [`Listener`] to the dispatcher:
     ///
     /// ```rust
-    /// extern crate hey_listen;
-    ///
     /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, Mutex, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
@@ -132,8 +130,6 @@ where
     /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// extern crate hey_listen;
-    ///
     /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, Mutex, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
