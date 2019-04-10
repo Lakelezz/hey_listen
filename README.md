@@ -64,8 +64,8 @@ and this to your crate's root (not needed in Rust 2018):
 extern crate hey_listen;
 ```
 
-[ci-badge]: https://img.shields.io/travis/Lakelezz/hey_listen.svg?style=flat-square&colorB=3fb732
-[ci]: https://travis-ci.org/Lakelezz/hey_listen
+[ci-badge]: https://img.shields.io/azure-devops/build/lakeware/1942ff94-1b1e-4422-be98-1cd4696568d1/7/breaking-changes.svg?style=flat-square
+[ci]: https://dev.azure.com/lakeware/hey_listen/_build?definitionId=7
 
 [docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square&colorB=32b6b7
 [docs]: https://docs.rs/hey_listen
