@@ -52,6 +52,8 @@
 //!
 //! ```
 //! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples
+#![deny(rust_2018_idioms)]
+
 use failure;
 
 pub mod rc;
