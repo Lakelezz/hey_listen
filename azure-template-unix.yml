@@ -1,0 +1,40 @@
+parameters:
+  name: ''
+  vmImage: ''
+  toolchain: 'stable'
+  features: 'all'
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  variables:
+    tc: ${{ parameters.toolchain }}
+    os: ${{ parameters.vmImage }}
+    features: ${{ parameters.features }}
+  steps:
+  - bash: |
+      curl -o rustup-init.sh https://sh.rustup.rs -sSf
+      sh rustup-init.sh --default-toolchain $(tc) -y
+    displayName: 'Install Rust'
+
+  - bash: |
+      source $HOME/.cargo/env
+      git submodule init
+      git submodule update
+      chmod +x opus/autogen.sh
+      if [[ "$(features)" == "all" ]]; then
+        cargo build --all-features
+      else
+        cargo build --no-default-features --features "$(features)"
+      fi
+    displayName: 'Build hey_listen'
+
+  - bash: |
+      source $HOME/.cargo/env
+      if [[ "$(features)" == "all" ]]; then
+        cargo test --all-features
+      else
+        cargo test --no-default-features --features "$(features)"
+      fi
+    displayName: 'Test hey_listen'
