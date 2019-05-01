@@ -1,4 +1,7 @@
-use hey_listen::{Listener, RwLock, PriorityEventDispatcher, SyncDispatcherRequest};
+use hey_listen::{
+    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    RwLock,
+};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
@@ -243,7 +246,10 @@ fn stop_listening_and_propagation_of_fns() {
     assert!(visitor_record.try_write().unwrap().is_empty());
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*visitor_record.try_write().unwrap(), [ClosureVisitor::First]);
+    assert_eq!(
+        *visitor_record.try_write().unwrap(),
+        [ClosureVisitor::First]
+    );
 
     dispatcher.dispatch_event(&Event::EventType);
     assert_eq!(

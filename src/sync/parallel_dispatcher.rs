@@ -109,7 +109,8 @@ where
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener)
+                    as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -118,7 +119,8 @@ where
         self.events.insert(
             event_identifier,
             ParallelFnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener)
+                    as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
             )]),
         );
     }

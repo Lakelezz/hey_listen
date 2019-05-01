@@ -1,4 +1,7 @@
-use hey_listen::{EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
+use hey_listen::{
+    sync::{EventDispatcher, Listener, SyncDispatcherRequest},
+    RwLock,
+};
 use std::{ops::Deref, sync::Arc};
 
 #[derive(Clone, Eq, Hash, PartialEq)]

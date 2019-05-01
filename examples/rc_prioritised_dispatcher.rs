@@ -11,7 +11,8 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    rc::priority_dispatcher::PriorityEventDispatcher, Listener, RwLock, SyncDispatcherRequest,
+    rc::{priority_dispatcher::PriorityEventDispatcher, Listener, SyncDispatcherRequest},
+    RwLock,
 };
 use std::{
     hash::{Hash, Hasher},

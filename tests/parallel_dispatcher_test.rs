@@ -1,6 +1,7 @@
-
-
-use hey_listen::{RwLock, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
+use hey_listen::{
+    sync::{ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener},
+    RwLock,
+};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]

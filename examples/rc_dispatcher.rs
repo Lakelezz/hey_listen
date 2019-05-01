@@ -11,7 +11,10 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::{rc::dispatcher::EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
+use hey_listen::{
+    rc::{EventDispatcher, Listener, SyncDispatcherRequest},
+    RwLock,
+};
 use std::rc::Rc;
 
 // This is our event-enum, it will represent possible events

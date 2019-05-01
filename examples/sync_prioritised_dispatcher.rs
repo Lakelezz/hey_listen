@@ -10,7 +10,10 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::{Listener, RwLock, PriorityEventDispatcher, SyncDispatcherRequest};
+use hey_listen::{
+    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    RwLock,
+};
 use std::{
     hash::{Hash, Hasher},
     mem::discriminant,

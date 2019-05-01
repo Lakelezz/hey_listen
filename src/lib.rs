@@ -51,9 +51,4 @@ use failure;
 pub mod rc;
 pub mod sync;
 
-pub use self::sync::{
-    dispatcher::EventDispatcher, parallel_dispatcher::ParallelEventDispatcher,
-    priority_dispatcher::PriorityEventDispatcher, Listener, ParallelDispatcherRequest,
-    ParallelListener, SyncDispatcherRequest,
-};
 pub use parking_lot::RwLock;

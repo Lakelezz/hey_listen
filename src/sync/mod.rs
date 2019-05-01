@@ -1,17 +1,22 @@
 use super::RwLock;
+use failure_derive::Fail;
 use rayon::ThreadPool;
 use std::{collections::HashMap, hash::Hash, sync::Weak};
-use failure_derive::Fail;
 
 pub mod dispatcher;
 pub mod parallel_dispatcher;
 pub mod priority_dispatcher;
 
+pub use dispatcher::EventDispatcher;
+pub use parallel_dispatcher::ParallelEventDispatcher;
+pub use priority_dispatcher::PriorityEventDispatcher;
+
 type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 
 type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
-type ParallelEventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
+type ParallelEventFunction<T> =
+    Vec<Box<dyn Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.
@@ -244,9 +249,6 @@ where
 /// Errors for ThreadPool-building related failures.
 #[derive(Fail, Debug)]
 pub enum BuildError {
-    #[fail(
-        display = "Internal error on trying to build thread-pool: {:?}",
-        _0
-    )]
+    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)]
     NumThreads(String),
 }

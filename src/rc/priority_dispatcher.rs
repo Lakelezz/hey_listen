@@ -259,7 +259,8 @@ where
                 if let ExecuteRequestsResult::Stopped =
                     execute_sync_dispatcher_requests(&mut listener_collection.fns, |callback| {
                         callback(event_identifier)
-                    }) {
+                    })
+                {
                     break;
                 }
 
