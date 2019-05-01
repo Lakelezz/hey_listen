@@ -52,7 +52,10 @@ where
     ///
     /// ```rust
     /// use std::sync::Arc;
-    /// use hey_listen::{RwLock, ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest};
+    /// use hey_listen::{
+    ///    RwLock,
+    ///    sync::{ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest},
+    /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -138,7 +141,10 @@ where
     /// ```rust
     /// use failure_derive::Fail;
     ///
-    /// use hey_listen::{RwLock, ParallelEventDispatcher, ParallelDispatcherRequest};
+    /// use hey_listen::{
+    ///    RwLock,
+    ///    sync::{Listener, ParallelEventDispatcher, ParallelDispatcherRequest},
+    /// };
     /// use std::sync::Arc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]

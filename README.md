@@ -19,7 +19,9 @@ Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTIN
 Here is a quick example on how to use the event-dispatcher:
 
 ```rust
-use hey_listen::{EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
+use hey_listen::{RwLock, sync::{EventDispatcher,
+    Listener, SyncDispatcherRequest},
+};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]

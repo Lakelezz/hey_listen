@@ -63,7 +63,10 @@ where
     ///
     /// ```rust
     /// use std::rc::Rc;
-    /// use hey_listen::{Listener, RwLock, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{
+    ///    RwLock,
+    ///    rc::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -159,7 +162,10 @@ where
     /// Adding an [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{RwLock, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{
+    ///    RwLock,
+    ///    rc::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    /// };
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]

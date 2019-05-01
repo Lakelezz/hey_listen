@@ -17,7 +17,10 @@
 //! Here is a quick example on how to use the sync event-dispatcher:
 //!
 //! ```rust
-//! use hey_listen::{Listener, EventDispatcher, RwLock, SyncDispatcherRequest};
+//! use hey_listen::{
+//!    RwLock,
+//!    sync::{Listener, EventDispatcher, SyncDispatcherRequest},
+//! };
 //! use std::sync::Arc;
 //!
 //! #[derive(Clone, Eq, Hash, PartialEq)]
