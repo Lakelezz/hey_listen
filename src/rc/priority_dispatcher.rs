@@ -1,5 +1,5 @@
 use super::{
-    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Listener, Mutex,
+    execute_sync_dispatcher_requests, ExecuteRequestsResult, FnsAndTraits, Listener, RwLock,
     SyncDispatcherRequest,
 };
 use std::{
@@ -63,7 +63,7 @@ where
     ///
     /// ```rust
     /// use std::rc::Rc;
-    /// use hey_listen::{Listener, Mutex, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{Listener, RwLock, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -77,7 +77,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Rc::new(Mutex::new(ListenerStruct {}));
+    ///     let listener = Rc::new(RwLock::new(ListenerStruct {}));
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener, 1);
@@ -118,7 +118,7 @@ where
     pub fn add_listener<D: Listener<T> + 'static>(
         &mut self,
         event_identifier: T,
-        listener: &Rc<Mutex<D>>,
+        listener: &Rc<RwLock<D>>,
         priority: P,
     ) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
@@ -126,7 +126,7 @@ where
                 prioritised_listener_collection.get_mut(&priority)
             {
                 priority_level_collection.traits.push(Rc::downgrade(
-                    &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
+                    &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
                 ));
 
                 return;
@@ -134,7 +134,7 @@ where
             prioritised_listener_collection.insert(
                 priority.clone(),
                 FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                    &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
+                    &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
                 )]),
             );
             return;
@@ -144,7 +144,7 @@ where
         b_tree_map.insert(
             priority,
             FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
+                &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
             )]),
         );
         self.events.insert(event_identifier, b_tree_map);
@@ -159,7 +159,7 @@ where
     /// Adding an [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{Mutex, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
+    /// use hey_listen::{RwLock, rc::priority_dispatcher::PriorityEventDispatcher, SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -178,13 +178,13 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Rc::new(Mutex::new(EventListener { used_method: false }));
+    ///     let listener = Rc::new(RwLock::new(EventListener { used_method: false }));
     ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
     ///     let weak_listener_ref = Rc::downgrade(&Rc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
-    ///             listener.lock().test_method(&event);
+    ///             listener.write().test_method(&event);
     ///
     ///             None
     ///         } else {
@@ -245,7 +245,7 @@ where
                     &mut listener_collection.traits,
                     |weak_listener| {
                         if let Some(listener_arc) = weak_listener.upgrade() {
-                            let mut listener = listener_arc.lock();
+                            let mut listener = listener_arc.write();
                             listener.on_event(event_identifier)
                         } else {
                             found_invalid_weak_ref = true;

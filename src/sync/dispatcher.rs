@@ -1,5 +1,5 @@
 use super::{
-    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, Mutex,
+    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, RwLock,
     SyncDispatcherRequest,
 };
 use std::{
@@ -49,7 +49,7 @@ where
     /// ```rust
     /// use std::sync::Arc;
     ///
-    /// use hey_listen::{Listener, EventDispatcher, Mutex, SyncDispatcherRequest};
+    /// use hey_listen::{Listener, EventDispatcher, RwLock, SyncDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -63,7 +63,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(ListenerStruct {}));
+    ///     let listener = Arc::new(RwLock::new(ListenerStruct {}));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
@@ -102,11 +102,11 @@ where
     pub fn add_listener<D: Listener<T> + Send + Sync + 'static>(
         &mut self,
         event_identifier: T,
-        listener: &Arc<Mutex<D>>,
+        listener: &Arc<RwLock<D>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<RwLock<dyn Listener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -115,7 +115,7 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<dyn Listener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<RwLock<dyn Listener<T> + Send + Sync + 'static>>),
             )]),
         );
     }
@@ -131,7 +131,7 @@ where
     /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{EventDispatcher, Mutex, SyncDispatcherRequest};
+    /// use hey_listen::{EventDispatcher, RwLock, SyncDispatcherRequest};
     /// use std::sync::Arc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -150,13 +150,13 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
+    ///     let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
-    ///             listener.lock().test_method(&event);
+    ///             listener.write().test_method(&event);
     ///
     ///             None
     ///         } else {
@@ -205,7 +205,7 @@ where
 
             execute_sync_dispatcher_requests(&mut listener_collection.traits, |weak_listener| {
                 if let Some(listener_arc) = weak_listener.upgrade() {
-                    let mut listener = listener_arc.lock();
+                    let mut listener = listener_arc.write();
                     listener.on_event(event_identifier)
                 } else {
                     found_invalid_weak_ref = true;

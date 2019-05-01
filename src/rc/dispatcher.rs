@@ -1,5 +1,5 @@
 use super::{
-    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, Mutex,
+    execute_sync_dispatcher_requests, FnsAndTraits, Listener, ListenerMap, RwLock,
     SyncDispatcherRequest,
 };
 use std::{
@@ -47,7 +47,7 @@ where
     /// Adding a [`Listener`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, Mutex, rc::SyncDispatcherRequest};
+    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -62,7 +62,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Rc::new(Mutex::new(ListenerStruct {}));
+    ///     let listener = Rc::new(RwLock::new(ListenerStruct {}));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
@@ -101,11 +101,11 @@ where
     pub fn add_listener<D: Listener<T> + 'static>(
         &mut self,
         event_identifier: T,
-        listener: &Rc<Mutex<D>>,
+        listener: &Rc<RwLock<D>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Rc::downgrade(
-                &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
+                &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
             ));
 
             return;
@@ -114,7 +114,7 @@ where
         self.events.insert(
             event_identifier,
             FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                &(Rc::clone(listener) as Rc<Mutex<dyn Listener<T> + 'static>>),
+                &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
             )]),
         );
     }
@@ -130,7 +130,7 @@ where
     /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, Mutex, rc::SyncDispatcherRequest};
+    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -149,13 +149,13 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Rc::new(Mutex::new(EventListener { used_method: false }));
+    ///     let listener = Rc::new(RwLock::new(EventListener { used_method: false }));
     ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
     ///     let weak_listener_ref = Rc::downgrade(&Rc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
-    ///             listener.lock().test_method(&event);
+    ///             listener.write().test_method(&event);
     ///
     ///             None
     ///         } else {
@@ -204,7 +204,7 @@ where
 
             execute_sync_dispatcher_requests(&mut listener_collection.traits, |weak_listener| {
                 if let Some(listener) = weak_listener.upgrade() {
-                    let mut listener = listener.lock();
+                    let mut listener = listener.write();
                     listener.on_event(event_identifier)
                 } else {
                     found_invalid_weak_ref = true;

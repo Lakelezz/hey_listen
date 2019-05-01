@@ -11,7 +11,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    rc::priority_dispatcher::PriorityEventDispatcher, Listener, Mutex, SyncDispatcherRequest,
+    rc::priority_dispatcher::PriorityEventDispatcher, Listener, RwLock, SyncDispatcherRequest,
 };
 use std::{
     hash::{Hash, Hasher},
@@ -71,7 +71,7 @@ impl Listener<EventEnum> for ListenerStruct {
 
 fn main() {
     // Create our listener.
-    let listener = Rc::new(Mutex::new(ListenerStruct {}));
+    let listener = Rc::new(RwLock::new(ListenerStruct {}));
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.

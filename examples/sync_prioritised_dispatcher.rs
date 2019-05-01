@@ -10,7 +10,7 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
+use hey_listen::{Listener, RwLock, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::{
     hash::{Hash, Hasher},
     mem::discriminant,
@@ -69,7 +69,7 @@ impl Listener<EventEnum> for ListenerStruct {
 
 fn main() {
     // Create our listener.
-    let listener = Arc::new(Mutex::new(ListenerStruct {}));
+    let listener = Arc::new(RwLock::new(ListenerStruct {}));
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.

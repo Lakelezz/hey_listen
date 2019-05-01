@@ -1,5 +1,5 @@
 use super::{
-    super::Mutex, BuildError, ParallelDispatcherRequest, ParallelFnsAndTraits, ParallelListener,
+    super::RwLock, BuildError, ParallelDispatcherRequest, ParallelFnsAndTraits, ParallelListener,
     ParallelListenerMap, ThreadPool,
 };
 use rayon::{
@@ -52,7 +52,7 @@ where
     ///
     /// ```rust
     /// use std::sync::Arc;
-    /// use hey_listen::{Mutex, ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest};
+    /// use hey_listen::{RwLock, ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest};
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
     /// enum Event {
@@ -66,7 +66,7 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(ListenerStruct {}));
+    ///     let listener = Arc::new(RwLock::new(ListenerStruct {}));
     ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
@@ -105,11 +105,11 @@ where
     pub fn add_listener<D: ParallelListener<T> + Send + Sync + 'static>(
         &mut self,
         event_identifier: T,
-        listener: &Arc<Mutex<D>>,
+        listener: &Arc<RwLock<D>>,
     ) {
         if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
             listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
             ));
 
             return;
@@ -118,7 +118,7 @@ where
         self.events.insert(
             event_identifier,
             ParallelFnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>),
+                &(Arc::clone(listener) as Arc<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>),
             )]),
         );
     }
@@ -136,7 +136,7 @@ where
     /// ```rust
     /// use failure_derive::Fail;
     ///
-    /// use hey_listen::{Mutex, ParallelEventDispatcher, ParallelDispatcherRequest};
+    /// use hey_listen::{RwLock, ParallelEventDispatcher, ParallelDispatcherRequest};
     /// use std::sync::Arc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -155,13 +155,13 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
+    ///     let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
     ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
     ///         if let Some(listener) = weak_listener_ref.upgrade() {
-    ///             listener.lock().test_method(&event);
+    ///             listener.write().test_method(&event);
     ///             None
     ///         } else {
     ///             Some(ParallelDispatcherRequest::StopListening)
@@ -226,8 +226,8 @@ where
     /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
-            let fns_to_remove = Mutex::new(Vec::new());
-            let traits_to_remove = Mutex::new(Vec::new());
+            let fns_to_remove = RwLock::new(Vec::new());
+            let traits_to_remove = RwLock::new(Vec::new());
 
             if let Some(ref thread_pool) = self.thread_pool {
                 thread_pool.install(|| {
@@ -247,11 +247,11 @@ where
                 );
             }
 
-            fns_to_remove.lock().iter().for_each(|index| {
+            fns_to_remove.write().iter().for_each(|index| {
                 listener_collection.fns.swap_remove(*index);
             });
 
-            traits_to_remove.lock().iter().for_each(|index| {
+            traits_to_remove.write().iter().for_each(|index| {
                 listener_collection.traits.swap_remove(*index);
             });
         }
@@ -266,8 +266,8 @@ where
     fn joined_parallel_dispatch(
         listener_collection: &ParallelFnsAndTraits<T>,
         event_identifier: &T,
-        fns_to_remove: &Mutex<Vec<usize>>,
-        traits_to_remove: &Mutex<Vec<usize>>,
+        fns_to_remove: &RwLock<Vec<usize>>,
+        traits_to_remove: &RwLock<Vec<usize>>,
     ) {
         join(
             || {
@@ -277,17 +277,17 @@ where
                     .enumerate()
                     .for_each(|(index, listener)| {
                         if let Some(listener_arc) = listener.upgrade() {
-                            let mut listener = listener_arc.lock();
+                            let mut listener = listener_arc.write();
 
                             if let Some(instruction) = listener.on_event(event_identifier) {
                                 match instruction {
                                     ParallelDispatcherRequest::StopListening => {
-                                        traits_to_remove.lock().push(index)
+                                        traits_to_remove.write().push(index)
                                     }
                                 }
                             }
                         } else {
-                            traits_to_remove.lock().push(index)
+                            traits_to_remove.write().push(index)
                         }
                     })
             },
@@ -300,7 +300,7 @@ where
                         if let Some(instruction) = callback(event_identifier) {
                             match instruction {
                                 ParallelDispatcherRequest::StopListening => {
-                                    fns_to_remove.lock().push(index);
+                                    fns_to_remove.write().push(index);
                                 }
                             }
                         } else {

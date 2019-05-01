@@ -1,7 +1,7 @@
 pub use super::{sync::SyncDispatcherRequest, Listener};
 use std::{collections::HashMap, hash::Hash, rc::Weak};
 
-use super::Mutex;
+use super::RwLock;
 pub mod dispatcher;
 pub mod priority_dispatcher;
 
@@ -73,7 +73,7 @@ struct FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    traits: Vec<Weak<Mutex<dyn Listener<T> + 'static>>>,
+    traits: Vec<Weak<RwLock<dyn Listener<T> + 'static>>>,
     fns: EventFunction<T>,
 }
 
@@ -81,7 +81,7 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    fn new_with_traits(trait_objects: Vec<Weak<Mutex<dyn Listener<T> + 'static>>>) -> Self {
+    fn new_with_traits(trait_objects: Vec<Weak<RwLock<dyn Listener<T> + 'static>>>) -> Self {
         FnsAndTraits {
             traits: trait_objects,
             fns: vec![],

@@ -1,4 +1,4 @@
-use super::Mutex;
+use super::RwLock;
 use rayon::ThreadPool;
 use std::{collections::HashMap, hash::Hash, sync::Weak};
 use failure_derive::Fail;
@@ -108,7 +108,7 @@ struct FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<dyn Listener<T> + Send + Sync + 'static>>>,
+    traits: Vec<Weak<RwLock<dyn Listener<T> + Send + Sync + 'static>>>,
     fns: EventFunction<T>,
 }
 
@@ -117,7 +117,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     fn new_with_traits(
-        trait_objects: Vec<Weak<Mutex<dyn Listener<T> + Send + Sync + 'static>>>,
+        trait_objects: Vec<Weak<RwLock<dyn Listener<T> + Send + Sync + 'static>>>,
     ) -> Self {
         FnsAndTraits {
             traits: trait_objects,
@@ -204,7 +204,7 @@ struct ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    traits: Vec<Weak<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>>,
+    traits: Vec<Weak<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>>,
     fns: ParallelEventFunction<T>,
 }
 
@@ -213,7 +213,7 @@ where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     fn new_with_traits(
-        trait_objects: Vec<Weak<Mutex<dyn ParallelListener<T> + Send + Sync + 'static>>>,
+        trait_objects: Vec<Weak<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>>,
     ) -> Self {
         ParallelFnsAndTraits {
             traits: trait_objects,

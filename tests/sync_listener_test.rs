@@ -1,4 +1,4 @@
-use hey_listen::{EventDispatcher, Listener, Mutex, SyncDispatcherRequest};
+use hey_listen::{EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
 use std::{ops::Deref, sync::Arc};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
@@ -39,13 +39,13 @@ impl Listener<Event> for EnumListener {
 
 #[test]
 fn dispatch_enum_variant_with_field() {
-    let listener = Arc::new(Mutex::new(EnumListener::SomeVariant(false)));
+    let listener = Arc::new(RwLock::new(EnumListener::SomeVariant(false)));
     let mut dispatcher = EventDispatcher::<Event>::default();
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
 
-    let enum_field = match *listener.lock().deref() {
+    let enum_field = match *listener.write().deref() {
         EnumListener::SomeVariant(x) => x,
     };
 
@@ -54,7 +54,7 @@ fn dispatch_enum_variant_with_field() {
 
 #[test]
 fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() {
-    let listener = Arc::new(Mutex::new(EventListener {
+    let listener = Arc::new(RwLock::new(EventListener {
         received_variant_a: false,
         received_variant_b: false,
     }));
@@ -63,21 +63,21 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let a_has_been_received = listener.try_lock().unwrap().received_variant_a;
-    let b_has_been_received = listener.try_lock().unwrap().received_variant_b;
+    let a_has_been_received = listener.try_write().unwrap().received_variant_a;
+    let b_has_been_received = listener.try_write().unwrap().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
     dispatcher.dispatch_event(&Event::VariantB);
-    let a_has_been_received = listener.try_lock().unwrap().received_variant_a;
-    let b_has_been_received = listener.try_lock().unwrap().received_variant_b;
+    let a_has_been_received = listener.try_write().unwrap().received_variant_a;
+    let b_has_been_received = listener.try_write().unwrap().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 }
 
 #[test]
 fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
-    let listener = Arc::new(Mutex::new(EventListener {
+    let listener = Arc::new(RwLock::new(EventListener {
         received_variant_a: false,
         received_variant_b: false,
     }));
@@ -88,14 +88,14 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
     dispatcher.add_listener(Event::VariantB, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let a_has_been_received = listener.lock().received_variant_a;
-    let b_has_been_received = listener.lock().received_variant_b;
+    let a_has_been_received = listener.write().received_variant_a;
+    let b_has_been_received = listener.write().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
     dispatcher.dispatch_event(&Event::VariantB);
-    let a_has_been_received = listener.lock().received_variant_a;
-    let b_has_been_received = listener.lock().received_variant_b;
+    let a_has_been_received = listener.write().received_variant_a;
+    let b_has_been_received = listener.write().received_variant_b;
     assert!(a_has_been_received);
     assert!(b_has_been_received);
 }
@@ -112,12 +112,12 @@ fn dispatch_to_function() {
         }
     }
 
-    let listener = Arc::new(Mutex::new(EventListener { used_method: false }));
+    let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
 
     let closure = Box::new(move |event: &Event| {
         let listener = weak_listener_ref.upgrade().unwrap();
-        listener.lock().test_method(event);
+        listener.write().test_method(event);
 
         None
     });
@@ -126,7 +126,7 @@ fn dispatch_to_function() {
     dispatcher.add_fn(Event::VariantA, closure);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    let listener = listener.lock();
+    let listener = listener.write();
     assert!(listener.used_method);
 }
 
@@ -148,7 +148,7 @@ fn register_and_request_stop_listening() {
         }
     }
 
-    let listener = Arc::new(Mutex::new(ListenerStruct {
+    let listener = Arc::new(RwLock::new(ListenerStruct {
         dispatched_events: 0,
     }));
 
@@ -157,7 +157,7 @@ fn register_and_request_stop_listening() {
     dispatcher.add_listener(Event::EventType, &listener);
     dispatcher.dispatch_event(&Event::EventType);
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(listener.lock().dispatched_events, 1);
+    assert_eq!(listener.write().dispatched_events, 1);
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
         }
     }
 
-    let listener = Arc::new(Mutex::new(EventListener {
+    let listener = Arc::new(RwLock::new(EventListener {
         received_variant_a: false,
         received_variant_b: false,
     }));
@@ -206,13 +206,13 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
     dispatcher.add_listener(Event::VariantB(0), &listener);
 
     dispatcher.dispatch_event(&Event::VariantA(10));
-    let a_has_been_received = listener.lock().received_variant_a;
-    let b_has_been_received = listener.lock().received_variant_b;
+    let a_has_been_received = listener.write().received_variant_a;
+    let b_has_been_received = listener.write().received_variant_b;
     assert!(a_has_been_received);
     assert!(!b_has_been_received);
 
     dispatcher.dispatch_event(&Event::VariantB(10));
-    let b_has_been_received = listener.lock().received_variant_b;
+    let b_has_been_received = listener.write().received_variant_b;
     assert!(b_has_been_received);
 }
 
@@ -230,11 +230,11 @@ fn stop_propagation_on_sync_dispatcher() {
         }
     }
 
-    let listener_a = Arc::new(Mutex::new(EventListener {
+    let listener_a = Arc::new(RwLock::new(EventListener {
         has_been_dispatched: false,
     }));
 
-    let listener_b = Arc::new(Mutex::new(EventListener {
+    let listener_b = Arc::new(RwLock::new(EventListener {
         has_been_dispatched: false,
     }));
 
@@ -244,8 +244,8 @@ fn stop_propagation_on_sync_dispatcher() {
     dispatcher.add_listener(Event::VariantA, &listener_b);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let a_has_been_dispatched = listener_a.try_lock().unwrap().has_been_dispatched;
-    let b_has_been_dispatched = listener_b.try_lock().unwrap().has_been_dispatched;
+    let a_has_been_dispatched = listener_a.try_write().unwrap().has_been_dispatched;
+    let b_has_been_dispatched = listener_b.try_write().unwrap().has_been_dispatched;
     assert!(a_has_been_dispatched);
     assert!(!b_has_been_dispatched);
 }
@@ -264,11 +264,11 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
         }
     }
 
-    let listener_a = Arc::new(Mutex::new(EventListener {
+    let listener_a = Arc::new(RwLock::new(EventListener {
         dispatch_counter: 0,
     }));
 
-    let listener_b = Arc::new(Mutex::new(EventListener {
+    let listener_b = Arc::new(RwLock::new(EventListener {
         dispatch_counter: 0,
     }));
 
@@ -277,26 +277,26 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
     dispatcher.add_listener(Event::VariantA, &listener_a);
     dispatcher.add_listener(Event::VariantA, &listener_b);
 
-    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    let counter_a = listener_a.try_write().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_write().unwrap().dispatch_counter;
     assert_eq!(counter_a, 0);
     assert_eq!(counter_b, 0);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    let counter_a = listener_a.try_write().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_write().unwrap().dispatch_counter;
     assert_eq!(counter_a, 1);
     assert_eq!(counter_b, 0);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    let counter_a = listener_a.try_write().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_write().unwrap().dispatch_counter;
     assert_eq!(counter_a, 1);
     assert_eq!(counter_b, 1);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter_a = listener_a.try_lock().unwrap().dispatch_counter;
-    let counter_b = listener_b.try_lock().unwrap().dispatch_counter;
+    let counter_a = listener_a.try_write().unwrap().dispatch_counter;
+    let counter_b = listener_b.try_write().unwrap().dispatch_counter;
     assert_eq!(counter_a, 1);
     assert_eq!(counter_b, 1);
 }
@@ -307,12 +307,12 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
         use_counter: usize,
     };
 
-    let listener = Arc::new(Mutex::new(EventListener { use_counter: 0 }));
+    let listener = Arc::new(RwLock::new(EventListener { use_counter: 0 }));
 
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_a = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopListening)
     });
@@ -320,12 +320,12 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_b = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopListening)
     });
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
@@ -333,11 +333,11 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 2);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 2);
 }
 
@@ -347,12 +347,12 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
         use_counter: usize,
     };
 
-    let listener = Arc::new(Mutex::new(EventListener { use_counter: 0 }));
+    let listener = Arc::new(RwLock::new(EventListener { use_counter: 0 }));
 
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_a = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
@@ -360,12 +360,12 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_b = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
@@ -373,11 +373,11 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 1);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 2);
 }
 
@@ -387,12 +387,12 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
         use_counter: usize,
     };
 
-    let listener = Arc::new(Mutex::new(EventListener { use_counter: 0 }));
+    let listener = Arc::new(RwLock::new(EventListener { use_counter: 0 }));
 
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_a = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopListeningAndPropagation)
     });
@@ -400,12 +400,12 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     let closure_b = Box::new(move |_event: &Event| {
         let listener = &weak_listener_ref.upgrade().unwrap();
-        listener.lock().use_counter += 1;
+        listener.write().use_counter += 1;
 
         Some(SyncDispatcherRequest::StopListeningAndPropagation)
     });
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
@@ -413,15 +413,15 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
 
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 1);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 2);
 
     dispatcher.dispatch_event(&Event::VariantA);
-    let counter = listener.try_lock().unwrap().use_counter;
+    let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 2);
 }
 

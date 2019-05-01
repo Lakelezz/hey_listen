@@ -19,7 +19,7 @@ Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTIN
 Here is a quick example on how to use the event-dispatcher:
 
 ```rust
-use hey_listen::{EventDispatcher, Listener, Mutex, SyncDispatcherRequest};
+use hey_listen::{EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
@@ -38,7 +38,7 @@ impl Listener<Event> for ListenerStruct {
 }
 
 fn main() {
-    let listener = Arc::new(Mutex::new(ListenerStruct {}));
+    let listener = Arc::new(RwLock::new(ListenerStruct {}));
     let mut dispatcher = EventDispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::Variant, &listener);

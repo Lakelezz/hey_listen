@@ -11,7 +11,7 @@
 
 
 
-use hey_listen::{Mutex, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
+use hey_listen::{RwLock, ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener};
 use std::sync::Arc;
 
 // This is our event-enum, it will represent possible events a single
@@ -47,9 +47,9 @@ fn main() {
     let mut dispatcher = ParallelEventDispatcher::<Event>::default();
 
     // We add listeners, each assigned with a different number.
-    let listener_a = Arc::new(Mutex::new(ListenerStruct { number: 0 }));
-    let listener_b = Arc::new(Mutex::new(ListenerStruct { number: 1 }));
-    let listener_c = Arc::new(Mutex::new(ListenerStruct { number: 2 }));
+    let listener_a = Arc::new(RwLock::new(ListenerStruct { number: 0 }));
+    let listener_b = Arc::new(RwLock::new(ListenerStruct { number: 1 }));
+    let listener_c = Arc::new(RwLock::new(ListenerStruct { number: 2 }));
 
     // Our closure gets its unique own number as well.
     let closure_a = Box::new(move |_event: &Event| {

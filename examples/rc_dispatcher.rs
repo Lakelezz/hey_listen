@@ -11,7 +11,7 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::{rc::dispatcher::EventDispatcher, Listener, Mutex, SyncDispatcherRequest};
+use hey_listen::{rc::dispatcher::EventDispatcher, Listener, RwLock, SyncDispatcherRequest};
 use std::rc::Rc;
 
 // This is our event-enum, it will represent possible events
@@ -51,7 +51,7 @@ impl Listener<EventEnum> for ListenerStruct {
 
 fn main() {
     // Create your listener.
-    let listener = Rc::new(Mutex::new(ListenerStruct {}));
+    let listener = Rc::new(RwLock::new(ListenerStruct {}));
 
     // Create your dispatcher and define the generic type what the dispatcher
     // shall accept as dispatchable type, it's our declared `EventEnum` in this

@@ -1,4 +1,4 @@
-use hey_listen::{Listener, Mutex, PriorityEventDispatcher, SyncDispatcherRequest};
+use hey_listen::{Listener, RwLock, PriorityEventDispatcher, SyncDispatcherRequest};
 use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
@@ -8,12 +8,12 @@ enum Event {
 
 struct EventListener {
     name: String,
-    name_record: Arc<Mutex<Vec<String>>>,
+    name_record: Arc<RwLock<Vec<String>>>,
 }
 
 impl Listener<Event> for EventListener {
     fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
-        let mut name_record = self.name_record.try_lock().unwrap();
+        let mut name_record = self.name_record.try_write().unwrap();
         name_record.push(self.name.clone());
         None
     }
@@ -30,29 +30,29 @@ impl Listener<Event> for EventListener {
 /// ordered by their priority-level.
 #[test]
 fn listeners_dispatch_in_correct_order() {
-    let names_record = Arc::new(Mutex::new(Vec::new()));
+    let names_record = Arc::new(RwLock::new(Vec::new()));
 
-    let first_receiver_a = Arc::new(Mutex::new(EventListener {
+    let first_receiver_a = Arc::new(RwLock::new(EventListener {
         name: "1".to_string(),
         name_record: Arc::clone(&names_record),
     }));
-    let last_receiver_a = Arc::new(Mutex::new(EventListener {
+    let last_receiver_a = Arc::new(RwLock::new(EventListener {
         name: "3".to_string(),
         name_record: Arc::clone(&names_record),
     }));
-    let second_receiver_a = Arc::new(Mutex::new(EventListener {
+    let second_receiver_a = Arc::new(RwLock::new(EventListener {
         name: "2".to_string(),
         name_record: Arc::clone(&names_record),
     }));
-    let last_receiver_b = Arc::new(Mutex::new(EventListener {
+    let last_receiver_b = Arc::new(RwLock::new(EventListener {
         name: "3".to_string(),
         name_record: Arc::clone(&names_record),
     }));
-    let first_receiver_b = Arc::new(Mutex::new(EventListener {
+    let first_receiver_b = Arc::new(RwLock::new(EventListener {
         name: "1".to_string(),
         name_record: Arc::clone(&names_record),
     }));
-    let second_receiver_b = Arc::new(Mutex::new(EventListener {
+    let second_receiver_b = Arc::new(RwLock::new(EventListener {
         name: "2".to_string(),
         name_record: Arc::clone(&names_record),
     }));
@@ -66,7 +66,7 @@ fn listeners_dispatch_in_correct_order() {
     dispatcher.add_listener(Event::EventType, &second_receiver_b, 2);
 
     dispatcher.dispatch_event(&Event::EventType);
-    let names_record = names_record.try_lock().unwrap();
+    let names_record = names_record.try_write().unwrap();
 
     assert_eq!(names_record[0], "1");
     assert_eq!(names_record[1], "1");
@@ -90,14 +90,14 @@ fn stop_listening() {
         }
     }
 
-    let receiver = Arc::new(Mutex::new(EventListener::default()));
+    let receiver = Arc::new(RwLock::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
     dispatcher.add_listener(Event::EventType, &receiver, 0);
 
     dispatcher.dispatch_event(&Event::EventType);
     dispatcher.dispatch_event(&Event::EventType);
 
-    assert_eq!(receiver.try_lock().unwrap().times_dispatched, 1);
+    assert_eq!(receiver.try_write().unwrap().times_dispatched, 1);
 }
 
 #[test]
@@ -114,8 +114,8 @@ fn stop_propagation() {
         }
     }
 
-    let receiver_a = Arc::new(Mutex::new(EventListener::default()));
-    let receiver_b = Arc::new(Mutex::new(EventListener::default()));
+    let receiver_a = Arc::new(RwLock::new(EventListener::default()));
+    let receiver_b = Arc::new(RwLock::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
     dispatcher.add_listener(Event::EventType, &receiver_a, 0);
@@ -123,8 +123,8 @@ fn stop_propagation() {
 
     dispatcher.dispatch_event(&Event::EventType);
 
-    assert_eq!(receiver_a.try_lock().unwrap().times_dispatched, 1);
-    assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 0);
+    assert_eq!(receiver_a.try_write().unwrap().times_dispatched, 1);
+    assert_eq!(receiver_b.try_write().unwrap().times_dispatched, 0);
 }
 
 #[test]
@@ -141,8 +141,8 @@ fn stop_listening_and_propagation() {
         }
     }
 
-    let receiver_a = Arc::new(Mutex::new(EventListener::default()));
-    let receiver_b = Arc::new(Mutex::new(EventListener::default()));
+    let receiver_a = Arc::new(RwLock::new(EventListener::default()));
+    let receiver_b = Arc::new(RwLock::new(EventListener::default()));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
     dispatcher.add_listener(Event::EventType, &receiver_a, 0);
@@ -152,42 +152,42 @@ fn stop_listening_and_propagation() {
     dispatcher.dispatch_event(&Event::EventType);
     dispatcher.dispatch_event(&Event::EventType);
 
-    assert_eq!(receiver_a.try_lock().unwrap().times_dispatched, 1);
-    assert_eq!(receiver_b.try_lock().unwrap().times_dispatched, 1);
+    assert_eq!(receiver_a.try_write().unwrap().times_dispatched, 1);
+    assert_eq!(receiver_b.try_write().unwrap().times_dispatched, 1);
 }
 
 #[test]
 fn stop_listening_of_fns() {
-    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    let counter: Arc<RwLock<usize>> = Arc::new(RwLock::new(0));
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
 
     let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let counter_ref = weak_counter_ref.upgrade().unwrap();
-        *counter_ref.try_lock().unwrap() += 1;
+        *counter_ref.try_write().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopListening)
     });
 
     dispatcher.add_fn(Event::EventType, closure, 0);
-    assert_eq!(*counter.try_lock().unwrap(), 0);
+    assert_eq!(*counter.try_write().unwrap(), 0);
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 1);
+    assert_eq!(*counter.try_write().unwrap(), 1);
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 1);
+    assert_eq!(*counter.try_write().unwrap(), 1);
 }
 
 #[test]
 fn stop_propagation_of_fns() {
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
-    let counter: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    let counter: Arc<RwLock<usize>> = Arc::new(RwLock::new(0));
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
     let first_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let counter_ref = &weak_counter_ref.upgrade().unwrap();
-        *counter_ref.try_lock().unwrap() += 1;
+        *counter_ref.try_write().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
@@ -195,20 +195,20 @@ fn stop_propagation_of_fns() {
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
     let second_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let counter_ref = &weak_counter_ref.upgrade().unwrap();
-        *counter_ref.try_lock().unwrap() += 1;
+        *counter_ref.try_write().unwrap() += 1;
 
         Some(SyncDispatcherRequest::StopPropagation)
     });
 
     dispatcher.add_fn(Event::EventType, first_closure, 0);
     dispatcher.add_fn(Event::EventType, second_closure, 1);
-    assert_eq!(*counter.try_lock().unwrap(), 0);
+    assert_eq!(*counter.try_write().unwrap(), 0);
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 1);
+    assert_eq!(*counter.try_write().unwrap(), 1);
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*counter.try_lock().unwrap(), 2);
+    assert_eq!(*counter.try_write().unwrap(), 2);
 }
 
 #[test]
@@ -220,12 +220,12 @@ fn stop_listening_and_propagation_of_fns() {
     }
 
     let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
-    let visitor_record: Arc<Mutex<Vec<ClosureVisitor>>> = Arc::new(Mutex::new(Vec::new()));
+    let visitor_record: Arc<RwLock<Vec<ClosureVisitor>>> = Arc::new(RwLock::new(Vec::new()));
 
     let weak_record_ref = Arc::downgrade(&Arc::clone(&visitor_record));
     let first_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let weak_ref = &weak_record_ref.upgrade().unwrap();
-        weak_ref.try_lock().unwrap().push(ClosureVisitor::First);
+        weak_ref.try_write().unwrap().push(ClosureVisitor::First);
 
         Some(SyncDispatcherRequest::StopListeningAndPropagation)
     });
@@ -233,21 +233,21 @@ fn stop_listening_and_propagation_of_fns() {
     let weak_record_ref = Arc::downgrade(&Arc::clone(&visitor_record));
     let second_closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let weak_ref = weak_record_ref.upgrade().unwrap();
-        weak_ref.try_lock().unwrap().push(ClosureVisitor::Second);
+        weak_ref.try_write().unwrap().push(ClosureVisitor::Second);
 
         Some(SyncDispatcherRequest::StopListeningAndPropagation)
     });
 
     dispatcher.add_fn(Event::EventType, first_closure, 0);
     dispatcher.add_fn(Event::EventType, second_closure, 1);
-    assert!(visitor_record.try_lock().unwrap().is_empty());
+    assert!(visitor_record.try_write().unwrap().is_empty());
 
     dispatcher.dispatch_event(&Event::EventType);
-    assert_eq!(*visitor_record.try_lock().unwrap(), [ClosureVisitor::First]);
+    assert_eq!(*visitor_record.try_write().unwrap(), [ClosureVisitor::First]);
 
     dispatcher.dispatch_event(&Event::EventType);
     assert_eq!(
-        *visitor_record.try_lock().unwrap(),
+        *visitor_record.try_write().unwrap(),
         [ClosureVisitor::First, ClosureVisitor::Second]
     );
 }

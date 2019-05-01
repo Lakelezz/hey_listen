@@ -17,7 +17,7 @@
 //! Here is a quick example on how to use the sync event-dispatcher:
 //!
 //! ```rust
-//! use hey_listen::{Listener, EventDispatcher, Mutex, SyncDispatcherRequest};
+//! use hey_listen::{Listener, EventDispatcher, RwLock, SyncDispatcherRequest};
 //! use std::sync::Arc;
 //!
 //! #[derive(Clone, Eq, Hash, PartialEq)]
@@ -36,7 +36,7 @@
 //! }
 //!
 //! fn main() {
-//!     let listener = Arc::new(Mutex::new(ListenerStruct {}));
+//!     let listener = Arc::new(RwLock::new(ListenerStruct {}));
 //!     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
 //!
 //!     dispatcher.add_listener(Event::EventType, &listener);
@@ -56,4 +56,4 @@ pub use self::sync::{
     priority_dispatcher::PriorityEventDispatcher, Listener, ParallelDispatcherRequest,
     ParallelListener, SyncDispatcherRequest,
 };
-pub use parking_lot::Mutex;
+pub use parking_lot::RwLock;
