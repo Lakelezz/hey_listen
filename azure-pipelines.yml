@@ -19,9 +19,9 @@ jobs:
 
 - template: 'azure-template-unix.yml'
   parameters:
-    name: 'macOS_1_33_0'
+    name: 'macOS_1_34_1'
     vmImage: 'xcode9-macos10.13'
-    toolchain: '1.33.0'
+    toolchain: '1.34.1'
 
 - template: 'azure-template-unix.yml'
   parameters:

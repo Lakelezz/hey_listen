@@ -1,4 +1,4 @@
-[![ci-badge][]][ci] [![docs-badge][]][docs] [![rust 1.33+ badge]][rust 1.33+ link] [![crates.io version]][crates.io link]
+[![ci-badge][]][ci] [![docs-badge][]][docs] [![rust version badge]][rust version link] [![crates.io version]][crates.io link]
 
 # Hey! Listen!
 
@@ -64,8 +64,8 @@ hey_listen = "0.2"
 [docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square&colorB=32b6b7
 [docs]: https://docs.rs/hey_listen
 
-[rust 1.33+ badge]: https://img.shields.io/badge/rust-1.33+-93450a.svg?style=flat-square&colorB=ff9a0d
-[rust 1.33+ link]: https://blog.rust-lang.org/2019/02/28/Rust-1.33.0.html
+[rust version badge]: https://img.shields.io/badge/rust-1.34.1+-93450a.svg?style=flat-square&colorB=ff9a0d
+[rust version link]: https://blog.rust-lang.org/2019/04/25/Rust-1.34.1.html
 
 [crates.io link]: https://crates.io/crates/hey_listen
 [crates.io version]: https://img.shields.io/crates/v/hey_listen.svg?style=flat-square&colorB=b73732
