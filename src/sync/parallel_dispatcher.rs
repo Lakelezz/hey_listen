@@ -15,7 +15,7 @@ use std::{error::Error, hash::Hash, sync::Arc};
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-pub struct ParallelEventDispatcher<T>
+pub struct ParallelDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
@@ -23,19 +23,19 @@ where
     thread_pool: Option<ThreadPool>,
 }
 
-impl<T> Default for ParallelEventDispatcher<T>
+impl<T> Default for ParallelDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn default() -> ParallelEventDispatcher<T> {
-        ParallelEventDispatcher {
+    fn default() -> ParallelDispatcher<T> {
+        ParallelDispatcher {
             events: ParallelListenerMap::new(),
             thread_pool: None,
         }
     }
 }
 
-impl<T> ParallelEventDispatcher<T>
+impl<T> ParallelDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
@@ -54,7 +54,7 @@ where
     /// use std::sync::Arc;
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{ParallelListener, ParallelEventDispatcher, ParallelDispatcherRequest},
+    ///    sync::{ParallelListener, ParallelDispatcher, ParallelDispatcherRequest},
     /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -70,7 +70,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
+    ///     let mut dispatcher: ParallelDispatcher<Event> = ParallelDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -143,7 +143,7 @@ where
     ///
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{Listener, ParallelEventDispatcher, ParallelDispatcherRequest},
+    ///    sync::{Listener, ParallelDispatcher, ParallelDispatcherRequest},
     /// };
     /// use std::sync::Arc;
     ///
@@ -164,7 +164,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: ParallelEventDispatcher<Event> = ParallelEventDispatcher::default();
+    ///     let mut dispatcher: ParallelDispatcher<Event> = ParallelDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<ParallelDispatcherRequest> {
@@ -239,7 +239,7 @@ where
 
             if let Some(ref thread_pool) = self.thread_pool {
                 thread_pool.install(|| {
-                    ParallelEventDispatcher::joined_parallel_dispatch(
+                    ParallelDispatcher::joined_parallel_dispatch(
                         listener_collection,
                         event_identifier,
                         &fns_to_remove,
@@ -247,7 +247,7 @@ where
                     )
                 });
             } else {
-                ParallelEventDispatcher::joined_parallel_dispatch(
+                ParallelDispatcher::joined_parallel_dispatch(
                     listener_collection,
                     event_identifier,
                     &fns_to_remove,

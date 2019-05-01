@@ -1,7 +1,7 @@
-//! This example shows you how to use the synchronous prioritised event-dispatcher: `PriorityEventDispatcher`.
+//! This example shows you how to use the synchronous prioritised event-dispatcher: `PriorityDispatcher`.
 //! We will dispatch enums to trait-objects and closures.
 //!
-//! The `PriorityEventDispatcher` itself can only dispatch to one listener at a time,
+//! The `PriorityDispatcher` itself can only dispatch to one listener at a time,
 //! thus referred to as synchronous.
 //! We will dispatch to lower priority-levels first.
 //!
@@ -11,7 +11,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    sync::{Listener, PriorityDispatcher, SyncDispatcherRequest},
     RwLock,
 };
 use std::{
@@ -76,8 +76,8 @@ fn main() {
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.
-    let mut dispatcher: PriorityEventDispatcher<u32, EventEnum> =
-        PriorityEventDispatcher::default();
+    let mut dispatcher: PriorityDispatcher<u32, EventEnum> =
+        PriorityDispatcher::default();
 
     // Start listening to a listener and decide their dispatch-priority, here level `1`.
     // The value we give `EventVariant` is not important for adding a listener,

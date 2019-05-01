@@ -22,9 +22,9 @@ type PriorityListenerMap<P, T> = HashMap<T, BTreeMap<P, FnsAndTraits<T>>>;
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
 /// [`Ord`]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
-/// [`EventListener`]: struct.EventDispatcher.html
+/// [`EventListener`]: struct.Dispatcher.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-pub struct PriorityEventDispatcher<P, T>
+pub struct PriorityDispatcher<P, T>
 where
     P: Ord,
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
@@ -32,19 +32,19 @@ where
     events: PriorityListenerMap<P, T>,
 }
 
-impl<P, T> Default for PriorityEventDispatcher<P, T>
+impl<P, T> Default for PriorityDispatcher<P, T>
 where
     P: Ord + Clone,
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn default() -> PriorityEventDispatcher<P, T> {
-        PriorityEventDispatcher {
+    fn default() -> PriorityDispatcher<P, T> {
+        PriorityDispatcher {
             events: PriorityListenerMap::new(),
         }
     }
 }
 
-impl<P, T> PriorityEventDispatcher<P, T>
+impl<P, T> PriorityDispatcher<P, T>
 where
     P: Ord + Clone,
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
@@ -65,7 +65,7 @@ where
     /// use std::sync::Arc;
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    ///    sync::{Listener, PriorityDispatcher, SyncDispatcherRequest},
     /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -81,7 +81,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
+    ///     let mut dispatcher: PriorityDispatcher<u32, Event> = PriorityDispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener, 1);
     /// }
@@ -112,7 +112,7 @@ where
     /// impl Eq for Event {}
     /// ```
     ///
-    /// [`EventDispatcher`]: struct.EventDispatcher.html
+    /// [`Dispatcher`]: struct.Dispatcher.html
     /// [`Listener`]: trait.Listener.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
@@ -164,7 +164,7 @@ where
     /// ```rust
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    ///    sync::{Listener, PriorityDispatcher, SyncDispatcherRequest},
     /// };
     /// use std::sync::Arc;
     ///
@@ -185,7 +185,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: PriorityEventDispatcher<u32, Event> = PriorityEventDispatcher::default();
+    ///     let mut dispatcher: PriorityDispatcher<u32, Event> = PriorityDispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {

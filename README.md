@@ -19,7 +19,7 @@ Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTIN
 Here is a quick example on how to use the event-dispatcher:
 
 ```rust
-use hey_listen::{RwLock, sync::{EventDispatcher,
+use hey_listen::{RwLock, sync::{Dispatcher,
     Listener, SyncDispatcherRequest},
 };
 use std::sync::Arc;
@@ -41,7 +41,7 @@ impl Listener<Event> for ListenerStruct {
 
 fn main() {
     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::Variant, &listener);
     dispatcher.dispatch_event(&Event::Variant);

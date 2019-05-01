@@ -1,8 +1,8 @@
-//! This example shows you how to use the parallel event-dispatcher: `ParallelEventDispatcher`.
+//! This example shows you how to use the parallel event-dispatcher: `ParallelDispatcher`.
 //! We will dispatch enums to trait-objects and closures.
 //!
-//! The `ParallelEventDispatcher` will dispatch to all listeners in parallel.
-//! For synchronous behaviour look at the `sync_dispatcher`-example, using the `EventDispatcher`.
+//! The `ParallelDispatcher` will dispatch to all listeners in parallel.
+//! For synchronous behaviour look at the `sync_dispatcher`-example, using the `Dispatcher`.
 //!
 //! I will often use the term `listener`, it describes an event-receiver,
 //! the dispatcher dispatches events to such listeners.
@@ -10,7 +10,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener},
+    sync::{ParallelDispatcherRequest, ParallelDispatcher, ParallelListener},
     RwLock,
 };
 use std::sync::Arc;
@@ -45,7 +45,7 @@ impl ParallelListener<Event> for ListenerStruct {
 
 fn main() {
     // Create our dispatcher.
-    let mut dispatcher = ParallelEventDispatcher::<Event>::default();
+    let mut dispatcher = ParallelDispatcher::<Event>::default();
 
     // We add listeners, each assigned with a different number.
     let listener_a = Arc::new(RwLock::new(ListenerStruct { number: 0 }));

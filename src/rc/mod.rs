@@ -5,8 +5,8 @@ use super::RwLock;
 pub mod dispatcher;
 pub mod priority_dispatcher;
 
-pub use dispatcher::EventDispatcher;
-pub use priority_dispatcher::PriorityEventDispatcher;
+pub use dispatcher::Dispatcher;
+pub use priority_dispatcher::PriorityDispatcher;
 
 type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest>>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;

@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{ParallelDispatcherRequest, ParallelEventDispatcher, ParallelListener},
+    sync::{ParallelDispatcherRequest, ParallelDispatcher, ParallelListener},
     RwLock,
 };
 use std::sync::Arc;
@@ -25,7 +25,7 @@ fn dispatch_parallel_to_dyn_traits() {
         }
     }
 
-    let mut dispatcher = ParallelEventDispatcher::<Event>::default();
+    let mut dispatcher = ParallelDispatcher::<Event>::default();
     let listener_a = Arc::new(RwLock::new(CountingEventListener::default()));
     let listener_b = Arc::new(RwLock::new(CountingEventListener::default()));
 
@@ -55,7 +55,7 @@ fn dispatch_parallel_to_dyn_traits() {
 
 #[test]
 fn dispatch_parallel_to_functions() {
-    let mut dispatcher = ParallelEventDispatcher::<Event>::default();
+    let mut dispatcher = ParallelDispatcher::<Event>::default();
 
     #[derive(Default)]
     struct DispatchCounter {
@@ -120,7 +120,7 @@ fn stop_listening_parallel_for_dyn_traits() {
         }
     }
 
-    let mut dispatcher = ParallelEventDispatcher::<Event>::default();
+    let mut dispatcher = ParallelDispatcher::<Event>::default();
     let listener_a = Arc::new(RwLock::new(CountingEventListener::default()));
     let listener_b = Arc::new(RwLock::new(CountingEventListener::default()));
 
@@ -150,7 +150,7 @@ fn stop_listening_parallel_for_dyn_traits() {
 
 #[test]
 fn stop_listening_parallel_for_fns() {
-    let mut dispatcher = ParallelEventDispatcher::<Event>::default();
+    let mut dispatcher = ParallelDispatcher::<Event>::default();
 
     #[derive(Default)]
     struct DispatchCounter {
@@ -203,5 +203,5 @@ fn stop_listening_parallel_for_fns() {
 #[test]
 fn is_send_and_sync() {
     fn assert_send<T: Send + Sync>(_: &T) {};
-    assert_send(&ParallelEventDispatcher::<Event>::default());
+    assert_send(&ParallelDispatcher::<Event>::default());
 }

@@ -7,9 +7,9 @@ pub mod dispatcher;
 pub mod parallel_dispatcher;
 pub mod priority_dispatcher;
 
-pub use dispatcher::EventDispatcher;
-pub use parallel_dispatcher::ParallelEventDispatcher;
-pub use priority_dispatcher::PriorityEventDispatcher;
+pub use dispatcher::Dispatcher;
+pub use parallel_dispatcher::ParallelDispatcher;
+pub use priority_dispatcher::PriorityDispatcher;
 
 type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;

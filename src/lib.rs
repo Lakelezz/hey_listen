@@ -19,7 +19,7 @@
 //! ```rust
 //! use hey_listen::{
 //!    RwLock,
-//!    sync::{Listener, EventDispatcher, SyncDispatcherRequest},
+//!    sync::{Listener, Dispatcher, SyncDispatcherRequest},
 //! };
 //! use std::sync::Arc;
 //!
@@ -40,7 +40,7 @@
 //!
 //! fn main() {
 //!     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-//!     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+//!     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
 //!
 //!     dispatcher.add_listener(Event::EventType, &listener);
 //! }

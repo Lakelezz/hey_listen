@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{EventDispatcher, Listener, SyncDispatcherRequest},
+    sync::{Dispatcher, Listener, SyncDispatcherRequest},
     RwLock,
 };
 use std::{ops::Deref, sync::Arc};
@@ -43,7 +43,7 @@ impl Listener<Event> for EnumListener {
 #[test]
 fn dispatch_enum_variant_with_field() {
     let listener = Arc::new(RwLock::new(EnumListener::SomeVariant(false)));
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
@@ -62,7 +62,7 @@ fn register_one_enum_listener_for_one_event_variant_but_dispatch_two_variants() 
         received_variant_b: false,
     }));
 
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
     dispatcher.add_listener(Event::VariantA, &listener);
 
     dispatcher.dispatch_event(&Event::VariantA);
@@ -85,7 +85,7 @@ fn register_one_listener_for_two_event_variants_and_dispatch_two_variants() {
         received_variant_b: false,
     }));
 
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::VariantA, &listener);
     dispatcher.add_listener(Event::VariantB, &listener);
@@ -125,7 +125,7 @@ fn dispatch_to_function() {
         None
     });
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure);
     dispatcher.dispatch_event(&Event::VariantA);
 
@@ -155,7 +155,7 @@ fn register_and_request_stop_listening() {
         dispatched_events: 0,
     }));
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
 
     dispatcher.add_listener(Event::EventType, &listener);
     dispatcher.dispatch_event(&Event::EventType);
@@ -203,7 +203,7 @@ fn register_one_listener_for_one_event_variant_but_dispatch_two_variants() {
         received_variant_a: false,
         received_variant_b: false,
     }));
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::VariantA(5), &listener);
     dispatcher.add_listener(Event::VariantB(0), &listener);
@@ -241,7 +241,7 @@ fn stop_propagation_on_sync_dispatcher() {
         has_been_dispatched: false,
     }));
 
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::VariantA, &listener_a);
     dispatcher.add_listener(Event::VariantA, &listener_b);
@@ -275,7 +275,7 @@ fn stop_listening_and_propagation_on_sync_dispatcher() {
         dispatch_counter: 0,
     }));
 
-    let mut dispatcher = EventDispatcher::<Event>::default();
+    let mut dispatcher = Dispatcher::<Event>::default();
 
     dispatcher.add_listener(Event::VariantA, &listener_a);
     dispatcher.add_listener(Event::VariantA, &listener_b);
@@ -331,7 +331,7 @@ fn stop_listening_on_sync_dispatcher_of_fns() {
     let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
@@ -371,7 +371,7 @@ fn stop_propagation_on_sync_dispatcher_of_fns() {
     let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
@@ -411,7 +411,7 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
     let counter = listener.try_write().unwrap().use_counter;
     assert_eq!(counter, 0);
 
-    let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     dispatcher.add_fn(Event::VariantA, closure_a);
     dispatcher.add_fn(Event::VariantA, closure_b);
     dispatcher.dispatch_event(&Event::VariantA);
@@ -431,5 +431,5 @@ fn stop_propagation_and_listening_on_sync_dispatcher_of_fns() {
 #[test]
 fn is_send_and_sync() {
     fn assert_send<T: Send + Sync>(_: &T) {};
-    assert_send(&EventDispatcher::<Event>::default());
+    assert_send(&Dispatcher::<Event>::default());
 }

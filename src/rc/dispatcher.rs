@@ -13,25 +13,25 @@ use std::{
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/!Sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-pub struct EventDispatcher<T>
+pub struct Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
     events: ListenerMap<T>,
 }
 
-impl<T> Default for EventDispatcher<T>
+impl<T> Default for Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    fn default() -> EventDispatcher<T> {
-        EventDispatcher {
+    fn default() -> Dispatcher<T> {
+        Dispatcher {
             events: ListenerMap::new(),
         }
     }
 }
 
-impl<T> EventDispatcher<T>
+impl<T> Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
@@ -47,7 +47,7 @@ where
     /// Adding a [`Listener`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
+    /// use hey_listen::{rc::dispatcher::Dispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -63,7 +63,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Rc::new(RwLock::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    ///     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -130,7 +130,7 @@ where
     /// Adding a [`Fn`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::{rc::dispatcher::EventDispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
+    /// use hey_listen::{rc::dispatcher::Dispatcher, rc::Listener, RwLock, rc::SyncDispatcherRequest};
     /// use std::rc::Rc;
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -150,7 +150,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Rc::new(RwLock::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    ///     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     ///     let weak_listener_ref = Rc::downgrade(&Rc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {

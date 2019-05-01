@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{Listener, PriorityEventDispatcher, SyncDispatcherRequest},
+    sync::{Listener, PriorityDispatcher, SyncDispatcherRequest},
     RwLock,
 };
 use std::sync::Arc;
@@ -60,7 +60,7 @@ fn listeners_dispatch_in_correct_order() {
         name_record: Arc::clone(&names_record),
     }));
 
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
     dispatcher.add_listener(Event::EventType, &last_receiver_a, 3);
     dispatcher.add_listener(Event::EventType, &last_receiver_b, 3);
     dispatcher.add_listener(Event::EventType, &second_receiver_a, 2);
@@ -94,7 +94,7 @@ fn stop_listening() {
     }
 
     let receiver = Arc::new(RwLock::new(EventListener::default()));
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
     dispatcher.add_listener(Event::EventType, &receiver, 0);
 
     dispatcher.dispatch_event(&Event::EventType);
@@ -119,7 +119,7 @@ fn stop_propagation() {
 
     let receiver_a = Arc::new(RwLock::new(EventListener::default()));
     let receiver_b = Arc::new(RwLock::new(EventListener::default()));
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
 
     dispatcher.add_listener(Event::EventType, &receiver_a, 0);
     dispatcher.add_listener(Event::EventType, &receiver_b, 0);
@@ -146,7 +146,7 @@ fn stop_listening_and_propagation() {
 
     let receiver_a = Arc::new(RwLock::new(EventListener::default()));
     let receiver_b = Arc::new(RwLock::new(EventListener::default()));
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
 
     dispatcher.add_listener(Event::EventType, &receiver_a, 0);
     dispatcher.add_listener(Event::EventType, &receiver_b, 0);
@@ -163,7 +163,7 @@ fn stop_listening_and_propagation() {
 fn stop_listening_of_fns() {
     let counter: Arc<RwLock<usize>> = Arc::new(RwLock::new(0));
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
 
     let closure = Box::new(move |_: &Event| -> Option<SyncDispatcherRequest> {
         let counter_ref = weak_counter_ref.upgrade().unwrap();
@@ -184,7 +184,7 @@ fn stop_listening_of_fns() {
 
 #[test]
 fn stop_propagation_of_fns() {
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
     let counter: Arc<RwLock<usize>> = Arc::new(RwLock::new(0));
 
     let weak_counter_ref = Arc::downgrade(&Arc::clone(&counter));
@@ -222,7 +222,7 @@ fn stop_listening_and_propagation_of_fns() {
         Second,
     }
 
-    let mut dispatcher = PriorityEventDispatcher::<u32, Event>::default();
+    let mut dispatcher = PriorityDispatcher::<u32, Event>::default();
     let visitor_record: Arc<RwLock<Vec<ClosureVisitor>>> = Arc::new(RwLock::new(Vec::new()));
 
     let weak_record_ref = Arc::downgrade(&Arc::clone(&visitor_record));
@@ -261,5 +261,5 @@ fn stop_listening_and_propagation_of_fns() {
 #[test]
 fn is_send_and_sync() {
     fn assert_send<T: Send + Sync>(_: &T) {};
-    assert_send(&PriorityEventDispatcher::<u32, Event>::default());
+    assert_send(&PriorityDispatcher::<u32, Event>::default());
 }

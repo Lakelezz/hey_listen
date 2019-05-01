@@ -13,25 +13,25 @@ use std::{
 ///
 /// [`Weak`]: https://doc.rust-lang.org/std/sync/struct.Weak.html
 /// [`Fn`]: https://doc.rust-lang.org/std/ops/trait.Fn.html
-pub struct EventDispatcher<T>
+pub struct Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
     events: ListenerMap<T>,
 }
 
-impl<T> Default for EventDispatcher<T>
+impl<T> Default for Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn default() -> EventDispatcher<T> {
-        EventDispatcher {
+    fn default() -> Dispatcher<T> {
+        Dispatcher {
             events: ListenerMap::new(),
         }
     }
 }
 
-impl<T> EventDispatcher<T>
+impl<T> Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
@@ -50,7 +50,7 @@ where
     /// use std::sync::Arc;
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{Listener, EventDispatcher, SyncDispatcherRequest},
+    ///    sync::{Listener, Dispatcher, SyncDispatcherRequest},
     /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -66,7 +66,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    ///     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     ///
     ///     dispatcher.add_listener(Event::EventType, &listener);
     /// }
@@ -135,7 +135,7 @@ where
     /// ```rust
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{Listener, EventDispatcher, SyncDispatcherRequest},
+    ///    sync::{Listener, Dispatcher, SyncDispatcherRequest},
     /// };
     /// use std::sync::Arc;
     ///
@@ -156,7 +156,7 @@ where
     ///
     /// fn main() {
     ///     let listener = Arc::new(RwLock::new(EventListener { used_method: false }));
-    ///     let mut dispatcher: EventDispatcher<Event> = EventDispatcher::default();
+    ///     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
     ///     let weak_listener_ref = Arc::downgrade(&Arc::clone(&listener));
     ///
     ///     let closure = Box::new(move |event: &Event| -> Option<SyncDispatcherRequest> {

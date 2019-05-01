@@ -1,10 +1,10 @@
-//! This example shows you how to use the synchronous event-dispatcher: `EventDispatcher`.
+//! This example shows you how to use the synchronous event-dispatcher: `Dispatcher`.
 //! We will dispatch enums to trait-objects and closures.
 //!
-//! The `EventDispatcher` itself can only dispatch to one listener at a time,
+//! The `Dispatcher` itself can only dispatch to one listener at a time,
 //! thus referred to as synchronous.
 //! For parallel behaviour look at the `parallel_dispatcher`-example, using the
-//! `ParallelEventDispatcher`.
+//! `ParallelDispatcher`.
 //!
 //! I will often use the term `listener`, it describes an event-receiver,
 //! the dispatcher dispatches events to such listeners.
@@ -12,7 +12,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    rc::{EventDispatcher, Listener, SyncDispatcherRequest},
+    rc::{Dispatcher, Listener, SyncDispatcherRequest},
     RwLock,
 };
 use std::rc::Rc;
@@ -59,7 +59,7 @@ fn main() {
     // Create your dispatcher and define the generic type what the dispatcher
     // shall accept as dispatchable type, it's our declared `EventEnum` in this
     // example.
-    let mut dispatcher: EventDispatcher<EventEnum> = EventDispatcher::default();
+    let mut dispatcher: Dispatcher<EventEnum> = Dispatcher::default();
 
     // Make your listener start listening.
     dispatcher.add_listener(EventEnum::EventVariantA, &listener);
