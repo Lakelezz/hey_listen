@@ -10,7 +10,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! hey_listen = "0.2.0"
+//! hey_listen = "0.3.0"
 //! ```
 //!
 //! # Example

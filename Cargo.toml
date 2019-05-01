@@ -1,6 +1,6 @@
 [package]
 name = "hey_listen"
-version = "0.2.1"
+version = "0.3.0"
 license = "ISC"
 keywords = ["event", "dispatcher", "listener", "emitter", "parallel"]
 categories = ["concurrency"]
