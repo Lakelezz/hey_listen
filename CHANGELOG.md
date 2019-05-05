@@ -2,6 +2,14 @@
 
 Covering up all the changes!
 
+## [0.4.0]
+
+Just a `parking_lot`-dependency update to `0.8`.
+
+### Breaking Changes
+
+- `parking_lot` updated to `0.8`.
+
 ## [0.3.0]
 
 This release updates the `parking_lot`-dependency to `0.7` and while we are at
