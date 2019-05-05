@@ -18,7 +18,7 @@ failure = "0.1"
 failure_derive = "0.1"
 
 [dependencies.parking_lot]
-version = "0.7"
+version = "0.8"
 
 [build-dependencies]
 skeptic = "0.13"
