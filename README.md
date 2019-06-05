@@ -55,7 +55,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hey_listen = "0.3"
+hey_listen = "0.4"
 ```
 
 [ci-badge]: https://img.shields.io/azure-devops/build/lakeware/1942ff94-1b1e-4422-be98-1cd4696568d1/7/breaking-changes.svg?style=flat-square
