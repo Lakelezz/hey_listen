@@ -311,8 +311,6 @@ where
                                     fns_to_remove.write().push(index);
                                 }
                             }
-                        } else {
-                            ()
                         }
                     });
             },
