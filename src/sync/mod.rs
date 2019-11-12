@@ -121,19 +121,10 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn new_with_traits(
-        trait_objects: Vec<Weak<RwLock<dyn Listener<T> + Send + Sync + 'static>>>,
-    ) -> Self {
-        FnsAndTraits {
-            traits: trait_objects,
-            fns: vec![],
-        }
-    }
-
-    fn new_with_fns(fns: EventFunction<T>) -> Self {
+    fn new() -> Self {
         FnsAndTraits {
             traits: vec![],
-            fns,
+            fns: vec![],
         }
     }
 }
@@ -217,19 +208,10 @@ impl<T> ParallelFnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn new_with_traits(
-        trait_objects: Vec<Weak<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>>,
-    ) -> Self {
-        ParallelFnsAndTraits {
-            traits: trait_objects,
-            fns: vec![],
-        }
-    }
-
-    fn new_with_fns(fns: ParallelEventFunction<T>) -> Self {
+    fn new() -> Self {
         ParallelFnsAndTraits {
             traits: vec![],
-            fns,
+            fns: vec![],
         }
     }
 }

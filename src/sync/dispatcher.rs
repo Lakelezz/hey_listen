@@ -106,20 +106,11 @@ where
         event_identifier: T,
         listener: &Arc<RwLock<D>>,
     ) {
-        if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
-            listener_collection.traits.push(Arc::downgrade(
-                &(Arc::clone(listener) as Arc<RwLock<dyn Listener<T> + Send + Sync + 'static>>),
-            ));
-
-            return;
-        }
-
-        self.events.insert(
-            event_identifier,
-            FnsAndTraits::new_with_traits(vec![Arc::downgrade(
-                &(Arc::clone(listener) as Arc<RwLock<dyn Listener<T> + Send + Sync + 'static>>),
-            )]),
-        );
+        let listener_collection = self.events.entry(event_identifier)
+            .or_insert(FnsAndTraits::new());
+        listener_collection.traits.push(Arc::downgrade(
+            &(Arc::clone(listener) as Arc<RwLock<dyn Listener<T> + Send + Sync + 'static>>),
+        ));
     }
 
     /// Adds a [`Fn`] to listen for an `event_identifier`.
@@ -182,14 +173,9 @@ where
         event_identifier: T,
         function: Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync + 'static>,
     ) {
-        if let Some(listener_collection) = self.events.get_mut(&event_identifier) {
-            listener_collection.fns.push(function);
-
-            return;
-        }
-
-        self.events
-            .insert(event_identifier, FnsAndTraits::new_with_fns(vec![function]));
+        let listener_collection = self.events.entry(event_identifier)
+            .or_insert(FnsAndTraits::new());
+        listener_collection.fns.push(function);
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`

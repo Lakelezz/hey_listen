@@ -84,17 +84,10 @@ impl<T> FnsAndTraits<T>
 where
     T: PartialEq + Eq + Hash + Clone + 'static,
 {
-    fn new_with_traits(trait_objects: Vec<Weak<RwLock<dyn Listener<T> + 'static>>>) -> Self {
-        FnsAndTraits {
-            traits: trait_objects,
-            fns: vec![],
-        }
-    }
-
-    fn new_with_fns(fns: EventFunction<T>) -> Self {
+    fn new() -> Self {
         FnsAndTraits {
             traits: vec![],
-            fns,
+            fns: vec![],
         }
     }
 }

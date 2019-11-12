@@ -124,33 +124,13 @@ where
         listener: &Rc<RwLock<D>>,
         priority: P,
     ) {
-        if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
-            if let Some(priority_level_collection) =
-                prioritised_listener_collection.get_mut(&priority)
-            {
-                priority_level_collection.traits.push(Rc::downgrade(
-                    &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
-                ));
-
-                return;
-            }
-            prioritised_listener_collection.insert(
-                priority.clone(),
-                FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                    &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
-                )]),
-            );
-            return;
-        }
-
-        let mut b_tree_map = BTreeMap::new();
-        b_tree_map.insert(
-            priority,
-            FnsAndTraits::new_with_traits(vec![Rc::downgrade(
-                &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
-            )]),
-        );
-        self.events.insert(event_identifier, b_tree_map);
+        let prioritised_listener_collection = self.events.entry(event_identifier)
+            .or_insert(BTreeMap::new());
+        let priority_level_collection = prioritised_listener_collection.entry(priority)
+            .or_insert(FnsAndTraits::new());
+        priority_level_collection.traits.push(Rc::downgrade(
+            &(Rc::clone(listener) as Rc<RwLock<dyn Listener<T> + 'static>>),
+        ));
     }
 
     /// Adds an [`Fn`] to listen for an `event_identifier`, considering
@@ -212,22 +192,11 @@ where
         function: Box<dyn Fn(&T) -> Option<SyncDispatcherRequest>>,
         priority: P,
     ) {
-        if let Some(prioritised_listener_collection) = self.events.get_mut(&event_identifier) {
-            if let Some(priority_level_collection) =
-                prioritised_listener_collection.get_mut(&priority)
-            {
-                priority_level_collection.fns.push(function);
-
-                return;
-            }
-            prioritised_listener_collection
-                .insert(priority.clone(), FnsAndTraits::new_with_fns(vec![function]));
-            return;
-        }
-
-        let mut b_tree_map = BTreeMap::new();
-        b_tree_map.insert(priority, FnsAndTraits::new_with_fns(vec![function]));
-        self.events.insert(event_identifier, b_tree_map);
+        let prioritised_listener_collection = self.events.entry(event_identifier)
+            .or_insert(BTreeMap::new());
+        let priority_level_collection = prioritised_listener_collection.entry(priority)
+            .or_insert(FnsAndTraits::new());
+        priority_level_collection.fns.push(function);
     }
 
     /// All [`Listener`]s listening to a passed `event_identifier`
