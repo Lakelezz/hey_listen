@@ -76,8 +76,7 @@ fn main() {
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.
-    let mut dispatcher: PriorityDispatcher<u32, EventEnum> =
-        PriorityDispatcher::default();
+    let mut dispatcher: PriorityDispatcher<u32, EventEnum> = PriorityDispatcher::default();
 
     // Start listening to a listener and decide their dispatch-priority, here level `1`.
     // The value we give `EventVariant` is not important for adding a listener,
