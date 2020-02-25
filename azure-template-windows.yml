@@ -9,14 +9,14 @@ jobs:
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:
-    tc: ${{ parameters.toolchain }}
+    toolchain: ${{ parameters.toolchain }}
     features: ${{ parameters.features }}
   steps:
   - powershell: |
-      Invoke-WebRequest -Uri "https://win.rustup.rs" -OutFile "rustup-init.exe"
-      &".\rustup-init.exe" --default-toolchain $(tc) -y
+      #Invoke-WebRequest -Uri "https://win.rustup.rs" -OutFile "rustup-init.exe"
+      #&".\rustup-init.exe" --default-toolchain $(toolchain) -y
+      rustup show
     displayName: 'Install Rust'
-
   - powershell: |
       If ("$(features)" -eq "all") {
         cargo build --all-features

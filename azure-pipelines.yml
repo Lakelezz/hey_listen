@@ -2,35 +2,35 @@ jobs:
 - template: 'azure-template-unix.yml'
   parameters:
     name: 'macOS_stable'
-    vmImage: 'xcode9-macos10.13'
+    vmImage: 'macOS-latest'
     toolchain: 'stable'
 
 - template: 'azure-template-unix.yml'
   parameters:
     name: 'macOS_beta'
-    vmImage: 'xcode9-macos10.13'
+    vmImage: 'macOS-latest'
     toolchain: 'beta'
 
 - template: 'azure-template-unix.yml'
   parameters:
     name: 'macOS_nightly'
-    vmImage: 'xcode9-macos10.13'
+    vmImage: 'macOS-latest'
     toolchain: 'nightly'
 
 - template: 'azure-template-unix.yml'
   parameters:
     name: 'macOS_1_34_1'
-    vmImage: 'xcode9-macos10.13'
+    vmImage: 'macOS-latest'
     toolchain: '1.34.1'
 
 - template: 'azure-template-unix.yml'
   parameters:
     name: 'Linux_stable'
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
     toolchain: 'stable'
 
 - template: 'azure-template-windows.yml'
   parameters:
     name: 'Windows_default_features'
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
     toolchain: 'stable'
