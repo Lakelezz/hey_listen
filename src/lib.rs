@@ -38,20 +38,33 @@
 //!     }
 //! }
 //!
-//! fn main() {
-//!     let listener = Arc::new(RwLock::new(ListenerStruct {}));
-//!     let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
+//! let listener = Arc::new(RwLock::new(ListenerStruct {}));
+//! let mut dispatcher: Dispatcher<Event> = Dispatcher::default();
 //!
-//!     dispatcher.add_listener(Event::EventType, &listener);
-//! }
+//! dispatcher.add_listener(Event::EventType, &listener);
 //!
 //! ```
 //! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples
 #![deny(rust_2018_idioms)]
 
-use failure;
-
 pub mod rc;
 pub mod sync;
 
-pub use parking_lot::RwLock;
+pub use parking_lot::{Mutex, RwLock};
+
+// #[cfg(feature = "parallel")]
+use rayon::ThreadPoolBuildError;
+
+/// `hey_listen`'s Error collection.
+#[derive(Debug)]
+pub enum Error {
+    /// Error when building a threadpool fails.
+    ThreadPoolBuilder(String),
+}
+
+// #[cfg(feature = "parallel")]
+impl From<ThreadPoolBuildError> for Error {
+    fn from(error: ThreadPoolBuildError) -> Self {
+        Self::ThreadPoolBuilder(error.to_string())
+    }
+}

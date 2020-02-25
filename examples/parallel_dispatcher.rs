@@ -10,10 +10,10 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{ParallelDispatcherRequest, ParallelDispatcher, ParallelListener},
+    sync::{ParallelDispatcher, ParallelDispatcherRequest, ParallelListener},
     RwLock,
 };
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 // This is our event-enum, it will represent possible events a single
 // event-dispatcher can dispatch.
@@ -31,9 +31,13 @@ struct ListenerStruct {
 
 // This implements the `ParallelListener`-trait, enabling the struct above (`ListenerStruct`)
 // to become a trait-object when starting listening.
-impl ParallelListener<Event> for ListenerStruct {
-    fn on_event(&mut self, _event: &Event) -> Option<ParallelDispatcherRequest> {
-        println!("{}", self.number);
+// The method only gets an immutable reference to self, if we want to mutate, we will need
+// to implement the trait for a Mutex or RwLock wrapping our Listener.
+impl ParallelListener<Event> for Arc<RwLock<ListenerStruct>> {
+    fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+        println!("{}", self.read().number);
+
+        self.write().number += 1;
 
         // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
         // the dispatcher.
@@ -43,32 +47,50 @@ impl ParallelListener<Event> for ListenerStruct {
     }
 }
 
+impl ParallelListener<Event> for Weak<RwLock<ListenerStruct>> {
+    fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+        if let Some(strong) = self.upgrade() {
+            println!("{}", strong.read().number);
+
+            None
+        } else {
+            Some(ParallelDispatcherRequest::StopListening)
+        }
+    }
+}
+
+impl ParallelListener<Event>
+    for Box<dyn Fn(&Event) -> Option<ParallelDispatcherRequest> + Send + Sync>
+{
+    fn on_event(&self, event: &Event) -> Option<ParallelDispatcherRequest> {
+        (&self)(&event)
+    }
+}
+
 fn main() {
     // Create our dispatcher.
-    let mut dispatcher = ParallelDispatcher::<Event>::default();
+    // The number of threads here is exemplary, one should figure out what's best.
+    let mut dispatcher = ParallelDispatcher::<Event>::new(2).expect("Failed to build threadpool");
 
     // We add listeners, each assigned with a different number.
-    let listener_a = Arc::new(RwLock::new(ListenerStruct { number: 0 }));
-    let listener_b = Arc::new(RwLock::new(ListenerStruct { number: 1 }));
-    let listener_c = Arc::new(RwLock::new(ListenerStruct { number: 2 }));
+    let listener_1 = Arc::new(RwLock::new(ListenerStruct { number: 0 }));
+    let listener_2 = Arc::new(RwLock::new(ListenerStruct { number: 1 }));
 
-    // Our closure gets its unique own number as well.
-    let closure_a = Box::new(move |_event: &Event| {
-        println!("3");
+    // Our closure gets its unique number as well.
+    let listener_3: Box<dyn Fn(&Event) -> Option<ParallelDispatcherRequest> + Send + Sync> =
+        Box::new(move |_event| {
+            println!("3");
 
-        // As we did in the `ParallelListener`-implementation:
-        None
-    });
+            // As we did in the `ParallelListener`-implementation:
+            None
+        });
 
     // We add some listeners for our only variant.
-    dispatcher.add_listener(Event::EventVariant, &listener_a);
-    dispatcher.add_listener(Event::EventVariant, &listener_b);
-    dispatcher.add_listener(Event::EventVariant, &listener_c);
+    dispatcher.add_listener(Event::EventVariant, Arc::downgrade(&listener_1));
+    dispatcher.add_listener(Event::EventVariant, Arc::clone(&listener_2));
+    dispatcher.add_listener(Event::EventVariant, listener_3);
 
-    // Closures require the `add_fn`-method.
-    dispatcher.add_fn(Event::EventVariant, closure_a);
-
-    // Let's remember that we gave every listener their own number
+    // Let's remember that we gave every listener their own unique number
     // and added in order of their number.
     // If we dispatch now, the numbers can be out of order due to
     // parallel dispatching.

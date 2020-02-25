@@ -1,6 +1,5 @@
-use super::RwLock;
-use failure_derive::Fail;
 use rayon::ThreadPool;
+use super::RwLock;
 use std::{collections::HashMap, hash::Hash, sync::Weak};
 
 pub mod dispatcher;
@@ -13,10 +12,6 @@ pub use priority_dispatcher::PriorityDispatcher;
 
 type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
-
-type ParallelListenerMap<T> = HashMap<T, ParallelFnsAndTraits<T>>;
-type ParallelEventFunction<T> =
-    Vec<Box<dyn Fn(&T) -> Option<ParallelDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.
@@ -204,34 +199,9 @@ pub enum ParallelDispatcherRequest {
     StopListening,
 }
 
-/// Yields `Send` and `Sync` closures and trait-objects.
-struct ParallelFnsAndTraits<T>
-where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    traits: Vec<Weak<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>>,
-    fns: ParallelEventFunction<T>,
-}
-
-impl<T> ParallelFnsAndTraits<T>
-where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    fn new_with_traits(
-        trait_objects: Vec<Weak<RwLock<dyn ParallelListener<T> + Send + Sync + 'static>>>,
-    ) -> Self {
-        ParallelFnsAndTraits {
-            traits: trait_objects,
-            fns: vec![],
-        }
-    }
-
-    fn new_with_fns(fns: ParallelEventFunction<T>) -> Self {
-        ParallelFnsAndTraits {
-            traits: vec![],
-            fns,
-        }
-    }
+#[derive(Debug)]
+pub enum AsyncDispatcherRequest {
+    StopListening,
 }
 
 /// Every event-receiver needs to implement this trait
@@ -243,12 +213,7 @@ where
 {
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
-    fn on_event(&mut self, event: &T) -> Option<ParallelDispatcherRequest>;
-}
-
-/// Errors for ThreadPool-building related failures.
-#[derive(Fail, Debug)]
-pub enum BuildError {
-    #[fail(display = "Internal error on trying to build thread-pool: {:?}", _0)]
-    NumThreads(String),
+    /// If you want to mutate the listener, consider wrapping it behind an
+    /// RwLock or Mutex.
+    fn on_event(&self, event: &T) -> Option<ParallelDispatcherRequest>;
 }
