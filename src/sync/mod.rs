@@ -1,17 +1,14 @@
 use rayon::ThreadPool;
 use super::RwLock;
-use std::{collections::HashMap, hash::Hash, sync::Weak};
+use std::{hash::Hash, sync::Weak};
 
-pub mod dispatcher;
 pub mod parallel_dispatcher;
 pub mod priority_dispatcher;
 
-pub use dispatcher::Dispatcher;
 pub use parallel_dispatcher::ParallelDispatcher;
 pub use priority_dispatcher::PriorityDispatcher;
 
 type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
-type ListenerMap<T> = HashMap<T, FnsAndTraits<T>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.
