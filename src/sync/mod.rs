@@ -1,14 +1,11 @@
 use rayon::ThreadPool;
-use super::RwLock;
-use std::{hash::Hash, sync::Weak};
+use std::hash::Hash;
 
 pub mod parallel_dispatcher;
 pub mod priority_dispatcher;
 
 pub use parallel_dispatcher::ParallelDispatcher;
 pub use priority_dispatcher::PriorityDispatcher;
-
-type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Send + Sync>>;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.
@@ -22,7 +19,7 @@ type EventFunction<T> = Vec<Box<dyn Fn(&T) -> Option<SyncDispatcherRequest> + Se
 /// `StopListeningAndPropagation` a combination of first `StopListening`
 /// and then `StopPropagation`.
 #[derive(Debug)]
-pub enum SyncDispatcherRequest {
+pub enum PriorityDispatcherRequest {
     StopListening,
     StopPropagation,
     StopListeningAndPropagation,
@@ -46,11 +43,11 @@ where
 {
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
-    fn on_event(&mut self, event: &T) -> Option<SyncDispatcherRequest>;
+    fn on_event(&self, event: &T) -> Option<ParallelDispatcherRequest>;
 }
 
 /// Iterates over the passed `vec` and applies `function` to each element.
-/// `function`'s returned [`SyncDispatcherRequest`] will instruct
+/// `function`'s returned [`ParallelDispatcherRequest`] will instruct
 /// a procedure depending on its variant:
 ///
 /// `StopListening`: Removes item from `vec`.
@@ -60,22 +57,21 @@ where
 /// then execute `StopPropagation`.
 ///
 /// **Note**: When `StopListening` is being executed,
-/// removal of items from `vec` will result use a swap of elements,
-/// resulting in an alteration of the order items were originally
-/// inserted into `vec`.
+/// removal of items from `vec` will swap elements,
+/// resulting in a different order.
 ///
 /// **Note**: Unlike [`retain`], `execute_sync_dispatcher_requests`
-/// can break the current iteration and is able to match [`SyncDispatcherRequest`]
+/// can stop the current iteration and is able to match [`ParallelDispatcherRequest`]
 /// and perform actions based on variants.
 ///
 /// [`retain`]: https://doc.rust-lang.org/alloc/vec/struct.Vec.html#method.retain
-/// [`SyncDispatcherRequest`]: enum.SyncDispatcherRequest.html
+/// [`ParallelDispatcherRequest`]: enum.ParallelDispatcherRequest.html
 pub(crate) fn execute_sync_dispatcher_requests<T, F>(
     vec: &mut Vec<T>,
     mut function: F,
 ) -> ExecuteRequestsResult
 where
-    F: FnMut(&T) -> Option<SyncDispatcherRequest>,
+    F: FnMut(&T) -> Option<PriorityDispatcherRequest>,
 {
     let mut index = 0;
 
@@ -83,49 +79,19 @@ where
         if index < vec.len() {
             match function(&vec[index]) {
                 None => index += 1,
-                Some(SyncDispatcherRequest::StopListening) => {
+                Some(PriorityDispatcherRequest::StopListening) => {
                     vec.swap_remove(index);
                 }
-                Some(SyncDispatcherRequest::StopPropagation) => {
+                Some(PriorityDispatcherRequest::StopPropagation) => {
                     return ExecuteRequestsResult::Stopped
                 }
-                Some(SyncDispatcherRequest::StopListeningAndPropagation) => {
+                Some(PriorityDispatcherRequest::StopListeningAndPropagation) => {
                     vec.swap_remove(index);
                     return ExecuteRequestsResult::Stopped;
                 }
             }
         } else {
             return ExecuteRequestsResult::Finished;
-        }
-    }
-}
-
-/// Yields closures and trait-objects.
-struct FnsAndTraits<T>
-where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    traits: Vec<Weak<RwLock<dyn Listener<T> + Send + Sync + 'static>>>,
-    fns: EventFunction<T>,
-}
-
-impl<T> FnsAndTraits<T>
-where
-    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
-{
-    fn new_with_traits(
-        trait_objects: Vec<Weak<RwLock<dyn Listener<T> + Send + Sync + 'static>>>,
-    ) -> Self {
-        FnsAndTraits {
-            traits: trait_objects,
-            fns: vec![],
-        }
-    }
-
-    fn new_with_fns(fns: EventFunction<T>) -> Self {
-        FnsAndTraits {
-            traits: vec![],
-            fns,
         }
     }
 }
@@ -138,11 +104,11 @@ mod tests {
     mod execute_sync_dispatcher_requests {
         use super::*;
 
-        fn map_usize_to_request(x: &usize) -> Option<SyncDispatcherRequest> {
+        fn map_usize_to_request(x: &usize) -> Option<PriorityDispatcherRequest> {
             match *x {
-                0 => Some(SyncDispatcherRequest::StopListening),
-                1 => Some(SyncDispatcherRequest::StopPropagation),
-                2 => Some(SyncDispatcherRequest::StopListeningAndPropagation),
+                0 => Some(PriorityDispatcherRequest::StopListening),
+                1 => Some(PriorityDispatcherRequest::StopPropagation),
+                2 => Some(PriorityDispatcherRequest::StopListeningAndPropagation),
                 _ => None,
             }
         }
@@ -187,17 +153,12 @@ mod tests {
 /// event-dispatcher.
 ///
 /// **Note**:
-/// Opposed to `SyncDispatcherRequest` a [`Listener`] cannot
+/// Opposed to `ParallelDispatcherRequest` a [`Listener`] cannot
 /// stop propagation as the propagation is happening parallel.
 ///
 /// [`Listener`]: trait.Listener.html
 #[derive(Debug)]
 pub enum ParallelDispatcherRequest {
-    StopListening,
-}
-
-#[derive(Debug)]
-pub enum AsyncDispatcherRequest {
     StopListening,
 }
 
@@ -213,4 +174,18 @@ where
     /// If you want to mutate the listener, consider wrapping it behind an
     /// RwLock or Mutex.
     fn on_event(&self, event: &T) -> Option<ParallelDispatcherRequest>;
+}
+
+/// Every event-receiver needs to implement this trait
+/// in order to receive dispatched events.
+/// `T` being the type you use for events, e.g. an `Enum`.
+pub trait PriorityListener<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
+{
+    /// This function will be called once a listened
+    /// event-type `T` has been dispatched.
+    /// If you want to mutate the listener, consider wrapping it behind an
+    /// RwLock or Mutex.
+    fn on_event(&self, event: &T) -> Option<PriorityDispatcherRequest>;
 }

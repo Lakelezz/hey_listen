@@ -11,7 +11,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{Listener, PriorityDispatcher, SyncDispatcherRequest},
+    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherRequest},
     RwLock,
 };
 use std::{
@@ -46,8 +46,8 @@ struct ListenerStruct {}
 
 // This implements the `Listener`-trait, enabling the struct above (`ListenerStruct`)
 // to become a trait-object when starting listening.
-impl Listener<EventEnum> for ListenerStruct {
-    fn on_event(&mut self, event: &EventEnum) -> Option<SyncDispatcherRequest> {
+impl PriorityListener<EventEnum> for Arc<RwLock<ListenerStruct>> {
+    fn on_event(&self, event: &EventEnum) -> Option<PriorityDispatcherRequest> {
         // Do whatever you want inside here, you can even access the struct's fields.
         // Be aware, the event is immutable.
 
@@ -70,26 +70,34 @@ impl Listener<EventEnum> for ListenerStruct {
     }
 }
 
+impl PriorityListener<EventEnum>
+    for Box<dyn Fn(&EventEnum) -> Option<PriorityDispatcherRequest> + Send + Sync>
+{
+    fn on_event(&self, event: &EventEnum) -> Option<PriorityDispatcherRequest> {
+        (self)(event)
+    }
+}
+
 fn main() {
     // Create our listener.
     let listener = Arc::new(RwLock::new(ListenerStruct {}));
 
     // Create our dispatcher, specify that we use `u32` as order-type
     // and `EventEnum` as event-enum.
-    let mut dispatcher: PriorityDispatcher<u32, EventEnum> =
-        PriorityDispatcher::default();
+    let mut dispatcher: PriorityDispatcher<u32, EventEnum> = PriorityDispatcher::default();
 
     // Start listening to a listener and decide their dispatch-priority, here level `1`.
     // The value we give `EventVariant` is not important for adding a listener,
     // since we implemented `Hash`-, `Eq`-, and `PartialEq`-trait in a manner that
     // we bypass fields for comparison but compares variants.
-    dispatcher.add_listener(EventEnum::EventVariant(0), &listener, 1);
+    dispatcher.add_listener(EventEnum::EventVariant(0), Arc::clone(&listener), 1);
 
     // If we want to work with a closure, we can do the following:
-    let listening_closure = Box::new(move |event: &EventEnum| {
-        // We have to be awar that an enum's variants are no types,
+    let listening_closure: Box<dyn Fn(&EventEnum) -> Option<PriorityDispatcherRequest> + Send + Sync> =
+        Box::new(move |event| {
+        // We have to be aware that an enum's variants are no types,
         // whenever we want to work with the enum we need to
-        // pattern-match or if-let-bind the enum in order to use its variant.
+        // pattern-match the enum in order to use its variant.
         let event_name = match *event {
             EventEnum::EventVariant(value) => value.to_string(),
         };
@@ -101,7 +109,7 @@ fn main() {
     });
 
     // Closures require the `add_fn`-method instead `add_listener`.
-    dispatcher.add_fn(EventEnum::EventVariant(0), listening_closure, 3);
+    dispatcher.add_listener(EventEnum::EventVariant(0), listening_closure, 3);
 
     // Dispatches our events to all listeners.
     dispatcher.dispatch_event(&EventEnum::EventVariant(1));
