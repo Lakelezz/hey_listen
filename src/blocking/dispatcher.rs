@@ -1,4 +1,7 @@
-use super::{execute_dispatcher_requests, Listener};
+use super::{
+    execute_dispatcher_requests,
+    Listener,
+};
 use std::{collections::HashMap, hash::Hash};
 
 /// In charge of parallel dispatching to all listeners.
@@ -31,7 +34,7 @@ where
     /// Adding a [`Listener`] to the dispatcher:
     ///
     /// ```rust
-    /// use hey_listen::rc::{
+    /// use hey_listen::blocking::{
     ///     Listener, Dispatcher, DispatcherRequest,
     /// };
     ///
@@ -80,7 +83,11 @@ where
     /// [`Listener`]: trait.Listener.html
     /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
-    pub fn add_listener<D: Listener<T> + Sized + 'static>(&mut self, event_key: T, listener: D) {
+    pub fn add_listener<D: Listener<T> + Sized + 'static>(
+        &mut self,
+        event_key: T,
+        listener: D,
+    ) {
         let listener = Box::new(listener);
 
         self.events
@@ -102,7 +109,7 @@ where
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(mut listener_collection) = self.events.get_mut(event_identifier) {
             execute_dispatcher_requests(&mut listener_collection, |listener| {
-                listener.on_event(event_identifier)
+                    listener.on_event(event_identifier)
             });
         }
     }
