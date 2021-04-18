@@ -1,8 +1,11 @@
 use rayon::ThreadPool;
 use std::hash::Hash;
 
+#[cfg(feature = "parallel")]
 pub mod parallel_dispatcher;
+#[cfg(feature = "parallel")]
 pub mod priority_dispatcher;
+#[cfg(feature = "async")]
 pub mod async_dispatcher;
 
 #[cfg(feature = "parallel")]
