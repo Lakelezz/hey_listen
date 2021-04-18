@@ -1,3 +1,4 @@
+#[cfg(feature = "parallel")]
 use rayon::ThreadPool;
 use std::hash::Hash;
 
