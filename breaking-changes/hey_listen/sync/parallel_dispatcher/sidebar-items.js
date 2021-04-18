@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ParallelDispatcher","In charge of parallel dispatching to all listeners."]]});
