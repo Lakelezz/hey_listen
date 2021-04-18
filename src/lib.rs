@@ -44,10 +44,17 @@
 //! ```
 //! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples
 #![deny(rust_2018_idioms)]
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::nursery)]
+#![deny(clippy::cargo)]
+#![deny(missing_docs)]
 
 #[cfg(feature = "blocking")]
+/// The blocking dispatcher module.
 pub mod rc;
 #[cfg(any(feature = "parallel", feature = "async"))]
+/// The parallel/async dispatcher module.
 pub mod sync;
 
 #[cfg(any(feature = "parallel", feature = "async"))]

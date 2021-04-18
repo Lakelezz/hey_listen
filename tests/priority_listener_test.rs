@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherRequest},
+    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherResult},
     RwLock,
 };
 use std::sync::Arc;
@@ -15,7 +15,7 @@ struct EventListener {
 }
 
 impl PriorityListener<Event> for Arc<RwLock<EventListener>> {
-    fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherRequest> {
+    fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherResult> {
         let listener = self.try_read().expect("Could not lock self");
 
         listener
@@ -93,10 +93,10 @@ fn stop_listening() {
     }
 
     impl PriorityListener<Event> for Arc<RwLock<EventListener>> {
-        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherRequest> {
+        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherResult> {
             self.write().times_dispatched += 1;
 
-            Some(PriorityDispatcherRequest::StopListening)
+            Some(PriorityDispatcherResult::StopListening)
         }
     }
 
@@ -118,10 +118,10 @@ fn stop_propagation() {
     }
 
     impl PriorityListener<Event> for Arc<RwLock<EventListener>> {
-        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherRequest> {
+        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherResult> {
             self.write().times_dispatched += 1;
 
-            Some(PriorityDispatcherRequest::StopPropagation)
+            Some(PriorityDispatcherResult::StopPropagation)
         }
     }
 
@@ -146,9 +146,9 @@ fn stop_listening_and_propagation() {
     }
 
     impl PriorityListener<Event> for Arc<RwLock<EventListener>> {
-        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherRequest> {
+        fn on_event(&self, _event: &Event) -> Option<PriorityDispatcherResult> {
             self.write().times_dispatched += 1;
-            Some(PriorityDispatcherRequest::StopListeningAndPropagation)
+            Some(PriorityDispatcherResult::StopListeningAndPropagation)
         }
     }
 

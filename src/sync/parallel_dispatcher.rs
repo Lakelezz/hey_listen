@@ -21,6 +21,10 @@ impl<T> ParallelDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sized + Sync + 'static,
 {
+    /// Creates a parallel dispatcher with `num_threads` amount of threads.
+    ///
+    /// # Errors
+    /// Fails with [`Error::ThreadPoolBuilder`] when building the fails.
     pub fn new(num_threads: usize) -> Result<Self, Error> {
         Ok(Self {
             events: HashMap::new(),
@@ -91,9 +95,9 @@ where
     /// impl Eq for Event {}
     /// ```
     ///
-    /// [`ParallelListener`]: trait.ParallelListener.html
-    /// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html
-    /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
+    /// [`ParallelListener`]: ParallelListener
+    /// [`Hash`]: std::hash::Hash
+    /// [`PartialEq`]: std::cmp::PartialEq
     pub fn add_listener<D: ParallelListener<T> + Send + Sync + Sized + 'static>(
         &mut self,
         event_key: T,
@@ -103,21 +107,26 @@ where
 
         self.events
             .entry(event_key)
-            .or_insert_with(|| Vec::new())
+            .or_insert_with(Vec::new)
             .push(listener as Box<(dyn ParallelListener<T> + Send + Sync + 'static)>);
     }
 
     /// Immediately after calling this method,
     /// the dispatcher will attempt to build a thread-pool with
     /// `num` amount of threads.
-    /// If internals fail to build, [`Error::ThreadPoolBuilder`] is returned.
     ///
-    /// **Note**: Failing to build the thread-pool will result
+    ///
+    /// # Errors
+    /// If internals fail to build, [`Error::ThreadPoolBuilder`] is returned.
+    /// Failing to build the thread-pool will result
     /// in keeping the prior thread-pool.
     ///
-    /// [`Error::ThreadPoolBuilder`]: enum.Error.html#variant.ThreadPoolBuilder
+    ///
+    /// [`Error::ThreadPoolBuilder`]: Error::ThreadPoolBuilder
     pub fn num_threads(&mut self, num: usize) -> Result<(), Error> {
-        Ok(self.thread_pool = ThreadPoolBuilder::new().num_threads(num).build()?)
+        self.thread_pool = ThreadPoolBuilder::new().num_threads(num).build()?;
+
+        Ok(())
     }
 
     /// All [`ParallelListener`]s listening to a passed `event_identifier`
@@ -126,10 +135,10 @@ where
     /// with `ParallelDispatchResult::StopListening` will cause them
     /// to be removed from the event-dispatcher.
     ///
-    /// [`ParallelListener`]: trait.ParallelListener.html
-    /// [`on_event`]: trait.ParallelListener.html#tymethod.on_event
-    /// [`ParallelDispatchResult`]: enum.ParallelDispatchResult.html
-    /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
+    /// [`ParallelListener`]: ParallelListener
+    /// [`on_event`]: ParallelListener::on_event
+    /// [`ParallelDispatchResult`]: ParallelDispatchResult
+    /// [`Option`]: std::option::Option
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
             let listeners_to_remove = Mutex::new(Vec::new());

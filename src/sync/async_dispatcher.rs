@@ -15,8 +15,10 @@ impl<T> AsyncDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sized + Sync + 'static,
 {
+
     /// Create a new async dispatcher.
     /// Amount of threads must be set via Tokio.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             events: HashMap::new(),
@@ -97,7 +99,7 @@ where
 
         self.events
             .entry(event_key)
-            .or_insert_with(|| Vec::new())
+            .or_insert_with(Vec::new)
             .push(listener as Box<(dyn AsyncListener<T> + Send + Sync + 'static)>);
     }
 
@@ -117,7 +119,7 @@ where
 
             for (id, listener) in listeners.iter().enumerate() {
                 let item = async move {
-                    (id, listener.on_event(&event_identifier).await)
+                    (id, listener.on_event(event_identifier).await)
                 };
 
                 unordered_fut.push(item);
@@ -137,5 +139,14 @@ where
                 listeners.swap_remove(*index);
             });
         }
+    }
+}
+
+impl<T> Default for AsyncDispatcher<T>
+where
+    T: PartialEq + Eq + Hash + Clone + Send + Sized + Sync + 'static,
+{
+    fn default() -> Self {
+        Self::new()
     }
 }

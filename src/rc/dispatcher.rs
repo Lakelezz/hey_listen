@@ -16,6 +16,7 @@ impl<T> Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Sized + 'static,
 {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             events: HashMap::new(),
@@ -91,7 +92,7 @@ where
 
         self.events
             .entry(event_key)
-            .or_insert_with(|| Vec::new())
+            .or_insert_with(Vec::new())
             .push(listener as Box<dyn Listener<T> + 'static>);
     }
 

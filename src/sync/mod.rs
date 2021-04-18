@@ -3,10 +3,13 @@ use rayon::ThreadPool;
 use std::hash::Hash;
 
 #[cfg(feature = "parallel")]
+/// This module contains the parallel dispatcher.
 pub mod parallel_dispatcher;
 #[cfg(feature = "parallel")]
+/// This module contains the priority dispatcher.
 pub mod priority_dispatcher;
 #[cfg(feature = "async")]
+/// This module contains the async dispatcher.
 pub mod async_dispatcher;
 
 #[cfg(feature = "parallel")]
@@ -29,9 +32,17 @@ pub use async_dispatcher::AsyncDispatcher;
 /// and then `StopPropagation`.
 #[cfg(feature = "parallel")]
 #[derive(Debug)]
-pub enum PriorityDispatcherRequest {
+// Clippy complains that all variants have the same prefix.
+// However, the term `Stop` is an essential component for the meaning of each
+// variant's name.
+#[allow(clippy::pub_enum_variant_names)]
+pub enum PriorityDispatcherResult {
+    /// Stops listening to the dispatcher.
     StopListening,
+    /// Prevents the event from reaching the next less important priority group.
     StopPropagation,
+    /// Stops listening and prevents events from reaching the next less
+    /// priority group.
     StopListeningAndPropagation,
 }
 
@@ -84,7 +95,7 @@ pub(crate) fn execute_sync_dispatcher_requests<T, F>(
     mut function: F,
 ) -> ExecuteRequestsResult
 where
-    F: FnMut(&T) -> Option<PriorityDispatcherRequest>,
+    F: FnMut(&T) -> Option<PriorityDispatcherResult>,
 {
     let mut index = 0;
 
@@ -92,13 +103,13 @@ where
         if index < vec.len() {
             match function(&vec[index]) {
                 None => index += 1,
-                Some(PriorityDispatcherRequest::StopListening) => {
+                Some(PriorityDispatcherResult::StopListening) => {
                     vec.swap_remove(index);
                 }
-                Some(PriorityDispatcherRequest::StopPropagation) => {
+                Some(PriorityDispatcherResult::StopPropagation) => {
                     return ExecuteRequestsResult::Stopped
                 }
-                Some(PriorityDispatcherRequest::StopListeningAndPropagation) => {
+                Some(PriorityDispatcherResult::StopListeningAndPropagation) => {
                     vec.swap_remove(index);
                     return ExecuteRequestsResult::Stopped;
                 }
@@ -117,11 +128,11 @@ mod tests {
     mod execute_sync_dispatcher_requests {
         use super::*;
 
-        fn map_usize_to_request(x: &usize) -> Option<PriorityDispatcherRequest> {
+        fn map_usize_to_request(x: &usize) -> Option<PriorityDispatcherResult> {
             match *x {
-                0 => Some(PriorityDispatcherRequest::StopListening),
-                1 => Some(PriorityDispatcherRequest::StopPropagation),
-                2 => Some(PriorityDispatcherRequest::StopListeningAndPropagation),
+                0 => Some(PriorityDispatcherResult::StopListening),
+                1 => Some(PriorityDispatcherResult::StopPropagation),
+                2 => Some(PriorityDispatcherResult::StopListeningAndPropagation),
                 _ => None,
             }
         }
@@ -167,12 +178,13 @@ mod tests {
 ///
 /// **Note**:
 /// Opposed to `ParallelDispatchResult` a [`Listener`] cannot
-/// stop propagation as the propagation is happening parallel.
+/// stop propagation as the propagation is happening in parallel.
 ///
 /// [`Listener`]: trait.Listener.html
 #[cfg(feature = "parallel")]
 #[derive(Debug)]
 pub enum ParallelDispatchResult {
+    /// Stops the listener from receiving further events from the dispatcher.
     StopListening,
 }
 
@@ -183,6 +195,7 @@ pub enum ParallelDispatchResult {
 #[derive(Debug)]
 #[cfg(feature = "async")]
 pub enum AsyncDispatchResult {
+    /// Stops the listener from receiving further events from the dispatcher.
     StopListening,
 }
 
@@ -198,7 +211,7 @@ where
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     /// If you want to mutate the listener, consider wrapping it behind an
-    /// RwLock or Mutex.
+    /// `RwLock` or `Mutex`.
     async fn on_event(&self, event: &T) -> Option<AsyncDispatchResult>;
 }
 
@@ -213,7 +226,7 @@ where
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     /// If you want to mutate the listener, consider wrapping it behind an
-    /// RwLock or Mutex.
+    /// `RwLock` or `Mutex`.
     fn on_event(&self, event: &T) -> Option<ParallelDispatchResult>;
 }
 
@@ -228,6 +241,6 @@ where
     /// This function will be called once a listened
     /// event-type `T` has been dispatched.
     /// If you want to mutate the listener, consider wrapping it behind an
-    /// RwLock or Mutex.
-    fn on_event(&self, event: &T) -> Option<PriorityDispatcherRequest>;
+    /// `RwLock` or `Mutex`.
+    fn on_event(&self, event: &T) -> Option<PriorityDispatcherResult>;
 }

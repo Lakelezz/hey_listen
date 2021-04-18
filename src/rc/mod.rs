@@ -38,8 +38,12 @@ pub(crate) enum ExecuteRequestsResult {
 /// and then `StopPropagation`.
 #[derive(Debug)]
 pub enum DispatcherRequest {
+    /// Stops listening to the dispatcher.
     StopListening,
+    /// Stops the event to be dispatched to other listeners.
     StopPropagation,
+    /// Stops listening to the dispatcher and prevents the event from further
+    /// dispatch.
     StopListeningAndPropagation,
 }
 

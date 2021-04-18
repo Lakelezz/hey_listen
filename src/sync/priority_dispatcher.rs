@@ -34,8 +34,8 @@ where
     P: Ord + Clone,
     T: PartialEq + Eq + Hash + Clone + Send + Sync + 'static,
 {
-    fn default() -> PriorityDispatcher<P, T> {
-        PriorityDispatcher {
+    fn default() -> Self {
+        Self {
             events: PriorityListenerMap::new(),
         }
     }
@@ -62,7 +62,7 @@ where
     /// use std::sync::Arc;
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherRequest},
+    ///    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherResult},
     /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -73,15 +73,15 @@ where
     /// struct ListenerStruct;
     ///
     /// impl PriorityListener<Event> for ListenerStruct {
-    ///     fn on_event(&self, event: &Event) -> Option<PriorityDispatcherRequest> { None }
+    ///     fn on_event(&self, event: &Event) -> Option<PriorityDispatcherResult> { None }
     /// }
     ///
-    /// fn main() {
-    ///     let listener = ListenerStruct;
-    ///     let mut dispatcher: PriorityDispatcher<u32, Event> = PriorityDispatcher::default();
+    /// let listener = ListenerStruct;
+    /// let mut dispatcher: PriorityDispatcher<u32, Event> = PriorityDispatcher::default();
     ///
-    ///     dispatcher.add_listener(Event::EventType, listener, 1);
-    /// }
+    ///
+    /// dispatcher.add_listener(Event::EventType, listener, 1);
+    ///
     /// ```
     ///
     /// Declaring your own [`Hash`]- and [`PartialEq`]-trait to bypass
