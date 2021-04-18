@@ -4,18 +4,18 @@ on: [push, pull_request]
 
 jobs:
   clippy:
-    name: Clippy
+    name: Run `cargo clippy`
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install `stable` Toolchain
+      - name: Install `nightly` Toolchain
         id: toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           components: clippy
           profile: minimal
           override: true
