@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherResult},
+    sync::{PriorityDispatcher, PriorityDispatcherResult, PriorityListener},
     RwLock,
 };
 use std::sync::Arc;

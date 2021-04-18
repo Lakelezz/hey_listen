@@ -1,8 +1,8 @@
-use super::{
-    execute_sync_dispatcher_requests, ExecuteRequestsResult, PriorityListener,
-};
+use super::{execute_sync_dispatcher_requests, ExecuteRequestsResult, PriorityListener};
 use std::{
-    collections::{BTreeMap, HashMap, btree_map::Entry as BTreeMapEntry, hash_map::Entry as HashMapEntry},
+    collections::{
+        btree_map::Entry as BTreeMapEntry, hash_map::Entry as HashMapEntry, BTreeMap, HashMap,
+    },
     hash::Hash,
 };
 
@@ -124,28 +124,24 @@ where
         let listener = Box::new(listener);
         let listener = listener as Box<(dyn PriorityListener<T> + Send + Sync + 'static)>;
 
-
         match self.events.entry(event_key) {
             HashMapEntry::Vacant(vacant_entry) => {
                 let mut map = BTreeMap::new();
 
-                map.insert(
-                    priority,
-                    vec![listener]
-                );
+                map.insert(priority, vec![listener]);
 
                 vacant_entry.insert(map);
-            },
+            }
             HashMapEntry::Occupied(mut occupied_entry) => {
                 match occupied_entry.get_mut().entry(priority) {
                     BTreeMapEntry::Vacant(vacant_entry) => {
                         vacant_entry.insert(vec![listener]);
-                    },
+                    }
                     BTreeMapEntry::Occupied(mut occupied_entry) => {
                         occupied_entry.get_mut().push(listener);
-                    },
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -163,15 +159,12 @@ where
     /// [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(prioritised_listener_collection) = self.events.get_mut(event_identifier) {
-
             for (_, mut listener_collection) in prioritised_listener_collection.iter_mut() {
-
-                if let ExecuteRequestsResult::Stopped = execute_sync_dispatcher_requests(
-                    &mut listener_collection,
-                    |listener| {
+                if let ExecuteRequestsResult::Stopped =
+                    execute_sync_dispatcher_requests(&mut listener_collection, |listener| {
                         listener.on_event(event_identifier)
-                    },
-                ) {
+                    })
+                {
                     break;
                 }
             }

@@ -1,7 +1,6 @@
 use super::{super::Mutex, AsyncDispatchResult, AsyncListener};
-use futures::{StreamExt, stream::FuturesUnordered};
+use futures::{stream::FuturesUnordered, StreamExt};
 use std::{collections::HashMap, hash::Hash};
-
 
 /// In charge of parallel dispatching to all listeners.
 pub struct AsyncDispatcher<T>
@@ -15,7 +14,6 @@ impl<T> AsyncDispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Send + Sized + Sync + 'static,
 {
-
     /// Create a new async dispatcher.
     /// Amount of threads must be set via Tokio.
     #[must_use]
@@ -118,22 +116,22 @@ where
             let unordered_fut: FuturesUnordered<_> = FuturesUnordered::new();
 
             for (id, listener) in listeners.iter().enumerate() {
-                let item = async move {
-                    (id, listener.on_event(event_identifier).await)
-                };
+                let item = async move { (id, listener.on_event(event_identifier).await) };
 
                 unordered_fut.push(item);
             }
 
             let listeners_to_remove = Mutex::new(Vec::<usize>::new());
 
-            unordered_fut.for_each(|v| {
-                if let Some(AsyncDispatchResult::StopListening) = v.1 {
-                    listeners_to_remove.lock().push(v.0);
-                }
+            unordered_fut
+                .for_each(|v| {
+                    if let Some(AsyncDispatchResult::StopListening) = v.1 {
+                        listeners_to_remove.lock().push(v.0);
+                    }
 
-                futures::future::ready(())
-            }).await;
+                    futures::future::ready(())
+                })
+                .await;
 
             listeners_to_remove.lock().iter().for_each(|index| {
                 listeners.swap_remove(*index);

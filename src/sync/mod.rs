@@ -2,22 +2,22 @@
 use rayon::ThreadPool;
 use std::hash::Hash;
 
+#[cfg(feature = "async")]
+/// This module contains the async dispatcher.
+pub mod async_dispatcher;
 #[cfg(feature = "parallel")]
 /// This module contains the parallel dispatcher.
 pub mod parallel_dispatcher;
 #[cfg(feature = "parallel")]
 /// This module contains the priority dispatcher.
 pub mod priority_dispatcher;
-#[cfg(feature = "async")]
-/// This module contains the async dispatcher.
-pub mod async_dispatcher;
 
+#[cfg(feature = "async")]
+pub use async_dispatcher::AsyncDispatcher;
 #[cfg(feature = "parallel")]
 pub use parallel_dispatcher::ParallelDispatcher;
 #[cfg(feature = "parallel")]
 pub use priority_dispatcher::PriorityDispatcher;
-#[cfg(feature = "async")]
-pub use async_dispatcher::AsyncDispatcher;
 
 /// An `enum` returning a request from a listener to its `sync` event-dispatcher.
 /// This `enum` is not restricted to dispatcher residing in the `sync`-module.

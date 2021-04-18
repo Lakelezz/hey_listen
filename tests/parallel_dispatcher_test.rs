@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{ParallelDispatcher, ParallelDispatchResult, ParallelListener},
+    sync::{ParallelDispatchResult, ParallelDispatcher, ParallelListener},
     Mutex, RwLock,
 };
 use std::sync::Arc;

@@ -10,7 +10,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{ParallelDispatcher, ParallelDispatchResult, ParallelListener},
+    sync::{ParallelDispatchResult, ParallelDispatcher, ParallelListener},
     RwLock,
 };
 use std::sync::{Arc, Weak};

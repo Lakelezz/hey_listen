@@ -11,7 +11,7 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::rc::{Dispatcher, Listener, DispatcherRequest};
+use hey_listen::rc::{Dispatcher, DispatcherRequest, Listener};
 
 // This is our event-enum, it will represent possible events
 // a single event-dispatcher can dispatch.
@@ -54,7 +54,6 @@ impl Listener<EventEnum> for Box<dyn Fn(&EventEnum) -> Option<DispatcherRequest>
     }
 }
 
-
 fn main() {
     // Create your listener.
     let listener = ListenerStruct {};
@@ -72,22 +71,23 @@ fn main() {
     dispatcher.dispatch_event(&EventEnum::EventVariantB);
 
     // If you want to work with a closure, you can do the following:
-    let listening_closure: Box<dyn Fn(&EventEnum) -> Option<DispatcherRequest>> = Box::new(move |event: &EventEnum| {
-        // Be aware, since enum's variants are no types,
-        // whenever you want to work with the enum,
-        // you need to pattern-match it of if-let-bind in order to find its variant,
-        // even if you listen to only one variant.
-        let event_name = match *event {
-            EventEnum::EventVariantA => "A".to_string(), // we won't listen to this ...
-            EventEnum::EventVariantB => "B".to_string(), // ... nor to this.
-            EventEnum::EventVariantC => "C, as in closure".to_string(),
-        };
+    let listening_closure: Box<dyn Fn(&EventEnum) -> Option<DispatcherRequest>> =
+        Box::new(move |event: &EventEnum| {
+            // Be aware, since enum's variants are no types,
+            // whenever you want to work with the enum,
+            // you need to pattern-match it of if-let-bind in order to find its variant,
+            // even if you listen to only one variant.
+            let event_name = match *event {
+                EventEnum::EventVariantA => "A".to_string(), // we won't listen to this ...
+                EventEnum::EventVariantB => "B".to_string(), // ... nor to this.
+                EventEnum::EventVariantC => "C, as in closure".to_string(),
+            };
 
-        println!("Received event-variant: {}!", event_name);
+            println!("Received event-variant: {}!", event_name);
 
-        // As we did in the `Listener`-implementation:
-        None
-    });
+            // As we did in the `Listener`-implementation:
+            None
+        });
 
     dispatcher.add_listener(EventEnum::EventVariantB, listening_closure);
 

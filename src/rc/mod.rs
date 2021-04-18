@@ -84,9 +84,7 @@ where
                 Some(DispatcherRequest::StopListening) => {
                     vec.swap_remove(index);
                 }
-                Some(DispatcherRequest::StopPropagation) => {
-                    return ExecuteRequestsResult::Stopped
-                }
+                Some(DispatcherRequest::StopPropagation) => return ExecuteRequestsResult::Stopped,
                 Some(DispatcherRequest::StopListeningAndPropagation) => {
                     vec.swap_remove(index);
                     return ExecuteRequestsResult::Stopped;

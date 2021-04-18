@@ -11,7 +11,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherResult},
+    sync::{PriorityDispatcher, PriorityDispatcherResult, PriorityListener},
     RwLock,
 };
 use std::{
@@ -93,8 +93,9 @@ fn main() {
     dispatcher.add_listener(EventEnum::EventVariant(0), Arc::clone(&listener), 1);
 
     // If we want to work with a closure, we can do the following:
-    let listening_closure: Box<dyn Fn(&EventEnum) -> Option<PriorityDispatcherResult> + Send + Sync> =
-        Box::new(move |event| {
+    let listening_closure: Box<
+        dyn Fn(&EventEnum) -> Option<PriorityDispatcherResult> + Send + Sync,
+    > = Box::new(move |event| {
         // We have to be aware that an enum's variants are no types,
         // whenever we want to work with the enum we need to
         // pattern-match the enum in order to use its variant.
