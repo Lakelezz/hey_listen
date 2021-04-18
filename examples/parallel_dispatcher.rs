@@ -10,7 +10,7 @@
 //! closures can also become a listener.
 
 use hey_listen::{
-    sync::{ParallelDispatcher, ParallelDispatcherRequest, ParallelListener},
+    sync::{ParallelDispatcher, ParallelDispatchResult, ParallelListener},
     RwLock,
 };
 use std::sync::{Arc, Weak};
@@ -34,35 +34,35 @@ struct ListenerStruct {
 // The method only gets an immutable reference to self, if we want to mutate, we will need
 // to implement the trait for a Mutex or RwLock wrapping our Listener.
 impl ParallelListener<Event> for Arc<RwLock<ListenerStruct>> {
-    fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+    fn on_event(&self, _event: &Event) -> Option<ParallelDispatchResult> {
         println!("{}", self.read().number);
 
         self.write().number += 1;
 
-        // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
+        // At the end, we have to return an `Option<SyncDispatchResult>` request back to
         // the dispatcher.
         // This request gives an instruction back to the dispatcher, here are the variants:
-        // - `ParallelDispatcherRequest::StopListening` to automatically stop listening.
+        // - `ParallelDispatchResult::StopListening` to automatically stop listening.
         None
     }
 }
 
 impl ParallelListener<Event> for Weak<RwLock<ListenerStruct>> {
-    fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+    fn on_event(&self, _event: &Event) -> Option<ParallelDispatchResult> {
         if let Some(strong) = self.upgrade() {
             println!("{}", strong.read().number);
 
             None
         } else {
-            Some(ParallelDispatcherRequest::StopListening)
+            Some(ParallelDispatchResult::StopListening)
         }
     }
 }
 
 impl ParallelListener<Event>
-    for Box<dyn Fn(&Event) -> Option<ParallelDispatcherRequest> + Send + Sync>
+    for Box<dyn Fn(&Event) -> Option<ParallelDispatchResult> + Send + Sync>
 {
-    fn on_event(&self, event: &Event) -> Option<ParallelDispatcherRequest> {
+    fn on_event(&self, event: &Event) -> Option<ParallelDispatchResult> {
         (&self)(&event)
     }
 }
@@ -77,7 +77,7 @@ fn main() {
     let listener_2 = Arc::new(RwLock::new(ListenerStruct { number: 1 }));
 
     // Our closure gets its unique number as well.
-    let listener_3: Box<dyn Fn(&Event) -> Option<ParallelDispatcherRequest> + Send + Sync> =
+    let listener_3: Box<dyn Fn(&Event) -> Option<ParallelDispatchResult> + Send + Sync> =
         Box::new(move |_event| {
             println!("3");
 

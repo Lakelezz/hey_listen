@@ -152,7 +152,7 @@ where
     /// All [`Listener`]s listening to a passed `event_identifier`
     /// will be called via their implemented [`on_event`]-method.
     /// [`Fn`]s returning [`Result`] with `Ok(())` will be retained
-    /// and `Err(SyncDispatcherRequest::StopListening)` will cause them to
+    /// and `Err(SyncDispatchResult::StopListening)` will cause them to
     /// be removed from the event-dispatcher.
     ///
     /// **Notice**: [`Listener`]s will called ordered by their priority-level.

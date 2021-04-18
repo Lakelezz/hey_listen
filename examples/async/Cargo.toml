@@ -1,0 +1,8 @@
+[package]
+name = "async"
+version = "0.1.0"
+authors = ["Lake Lezz <12222135+Lakelezz@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies.hey_listen]
+path = "../../"

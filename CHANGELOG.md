@@ -2,6 +2,40 @@
 
 Covering up all the changes!
 
+## [0.5.0]
+
+This update adds an async dispatcher, a new approach to how dispatchers are
+feature-gated, and dispatchers no longer expect the listeners to be wrapped in
+example `Arc<RwLock<Listener>>`.
+
+### Features
+First, a tokio async dispatcher has been added.
+It requires the `async`-feature.
+
+Besides the `async`-feature, blocking dispatchers are now inside `blocking`,
+those don't support multithreading, they keep `Rc`s to the listener.
+
+There is also the `rayon`-based `parallel`-feature, it utilises a threadpool
+for dispatching. Originally this was called `sync`-module. The normal dispatcher
+has been removed from this module as it has no purpose.
+
+### Change to Listeners
+Dispatchers take the type implementing the trait by value, this means you can
+provide a weak reference, strong reference, or value.
+Before dispatchers secretly acquired a weak reference to the provided reference counter.
+
+### Breaking Changes
+- Renamed dispatcher requests to `DispatchResult`.
+- Introduced features and replaced modules by: `blocking`, `parallel`, `async`
+    - `blocking`: pulls in single-threaded dispatchers,
+    - `parallel` pulls in `rayon` for threadpooled dispatchers,
+    - `async` pulls in `async-trait` and `tokio` for async dispatchers,
+- Removed `failure`.
+- Removed `Rc` based `PriorityDispatcher`.
+
+### Stable Changes
+- Added async dispatcher.
+
 ## [0.4.0]
 
 Just a `parking_lot`-dependency update to `0.8`.
@@ -68,13 +102,13 @@ Nonetheless, requests to parallel dispatchers are limited to unsubscribing.
 ### Added
 
 - `ParallelEventDispatcher` has been added.
-- `SyncDispatcherRequest` to return instructions from listeners back to dispatcher.
-- `ParallelDispatcherRequest` to return instructions from listeners back to parallel dispatcher.
+- `SyncDispatchResult` to return instructions from listeners back to dispatcher.
+- `ParallelDispatchResult` to return instructions from listeners back to parallel dispatcher.
 - Examples have been added.
 
 ### Breaking Changes
 
-- Synchronous dispatchers return `Option<SyncDispatcherRequest>`.
+- Synchronous dispatchers return `Option<SyncDispatchResult>`.
 
 ---
 

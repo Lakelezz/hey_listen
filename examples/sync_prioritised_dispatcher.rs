@@ -57,14 +57,14 @@ impl PriorityListener<EventEnum> for Arc<RwLock<ListenerStruct>> {
             }
         }
 
-        // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
+        // At the end, we have to return an `Option<SyncDispatchResult>` request back to
         // the dispatcher.
         // This request gives an instruction back to the dispatcher, here are the variants:
-        // - `SyncDispatcherRequest::StopListening` to automatically
+        // - `SyncDispatchResult::StopListening` to automatically
         // stop listening.
-        // - `SyncDispatcherRequest::StopPropagation` stops the dispatcher from dispatching
+        // - `SyncDispatchResult::StopPropagation` stops the dispatcher from dispatching
         // to other listeners in this instance of dispatching.
-        // - `SyncDispatcherRequest::StopListeningAndPropagation` combines the first and second.
+        // - `SyncDispatchResult::StopListeningAndPropagation` combines the first and second.
         // - `None`, equals to sending no request to the dispatcher, everything will stay as it is.
         None
     }

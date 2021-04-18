@@ -4,11 +4,9 @@
 
 `Hey_listen` is a collection of event-dispatchers aiming to suit all needs!\
 Currently covering:
-* Synchronous dispatcher
-* Priority dispatcher
-* Threadpool dispatcher
-
-Whenever applicable, dispatchers have an `Rc` and `Arc` variant.
+* Priority dispatch
+* Threadpool dispatch
+* Async dispatch
 
 View the `examples`-folder on how to use each dispatcher.
 
@@ -18,21 +16,20 @@ Everyone is welcome to contribute, check out the [`CONTRIBUTING.md`](CONTRIBUTIN
 
 Here is a quick example on how to use the event-dispatcher:
 
-```rust
-use hey_listen::{RwLock, sync::{Dispatcher,
-    Listener, SyncDispatcherRequest},
+```rust,no_run
+use hey_listen::sync::{
+    ParallelDispatcher, ParallelListener, ParallelDispatchResult,
 };
-use std::sync::Arc;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 enum Event {
     Variant,
 }
 
-struct ListenerStruct {}
+struct Listener {}
 
-impl Listener<Event> for ListenerStruct {
-    fn on_event(&mut self, _event: &Event) -> Option<SyncDispatcherRequest> {
+impl ParallelListener<Event> for Listener {
+    fn on_event(&self, _event: &Event) -> Option<ParallelDispatchResult> {
         println!("I'm listening! :)");
 
         None
@@ -40,10 +37,10 @@ impl Listener<Event> for ListenerStruct {
 }
 
 fn main() {
-    let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    let mut dispatcher = Dispatcher::<Event>::default();
+    let listener = Listener {};
+    let mut dispatcher = ParallelDispatcher::<Event>::new(4).expect("Could not construct threadpool");
 
-    dispatcher.add_listener(Event::Variant, &listener);
+    dispatcher.add_listener(Event::Variant, listener);
     dispatcher.dispatch_event(&Event::Variant);
 }
 

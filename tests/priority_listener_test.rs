@@ -169,6 +169,6 @@ fn stop_listening_and_propagation() {
 
 #[test]
 fn is_send_and_sync() {
-    fn assert_send<T: Send + Sync>(_: &T) {};
+    fn assert_send<T: Send + Sync>(_: &T) {}
     assert_send(&PriorityDispatcher::<u32, Event>::default());
 }

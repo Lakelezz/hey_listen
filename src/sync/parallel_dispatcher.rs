@@ -1,6 +1,6 @@
 use super::{
     super::{Error, Mutex},
-    ParallelDispatcherRequest, ParallelListener, ThreadPool,
+    ParallelDispatchResult, ParallelListener, ThreadPool,
 };
 use rayon::{
     prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
@@ -44,7 +44,7 @@ where
     /// use std::sync::Arc;
     /// use hey_listen::{
     ///    RwLock,
-    ///    sync::{ParallelListener, ParallelDispatcher, ParallelDispatcherRequest},
+    ///    sync::{ParallelListener, ParallelDispatcher, ParallelDispatchResult},
     /// };
     ///
     /// #[derive(Clone, Eq, Hash, PartialEq)]
@@ -55,7 +55,7 @@ where
     /// struct ListenerStruct {}
     ///
     /// impl ParallelListener<Event> for Arc<RwLock<ListenerStruct>> {
-    ///     fn on_event(&self, event: &Event) -> Option<ParallelDispatcherRequest> { None }
+    ///     fn on_event(&self, event: &Event) -> Option<ParallelDispatchResult> { None }
     /// }
     ///
     ///
@@ -122,13 +122,13 @@ where
 
     /// All [`ParallelListener`]s listening to a passed `event_identifier`
     /// will be called via their implemented [`on_event`]-method.
-    /// [`ParallelListener`]s returning an [`Option`] wrapping [`ParallelDispatcherRequest`]
-    /// with `ParallelDispatcherRequest::StopListening` will cause them
+    /// [`ParallelListener`]s returning an [`Option`] wrapping [`ParallelDispatchResult`]
+    /// with `ParallelDispatchResult::StopListening` will cause them
     /// to be removed from the event-dispatcher.
     ///
     /// [`ParallelListener`]: trait.ParallelListener.html
     /// [`on_event`]: trait.ParallelListener.html#tymethod.on_event
-    /// [`ParallelDispatcherRequest`]: enum.ParallelDispatcherRequest.html
+    /// [`ParallelDispatchResult`]: enum.ParallelDispatchResult.html
     /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
     pub fn dispatch_event(&mut self, event_identifier: &T) {
         if let Some(listener_collection) = self.events.get_mut(event_identifier) {
@@ -141,7 +141,7 @@ where
                     .for_each(|(index, listener)| {
                         if let Some(instruction) = listener.on_event(event_identifier) {
                             match instruction {
-                                ParallelDispatcherRequest::StopListening => {
+                                ParallelDispatchResult::StopListening => {
                                     listeners_to_remove.lock().push(index)
                                 }
                             }

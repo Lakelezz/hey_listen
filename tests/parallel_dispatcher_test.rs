@@ -1,5 +1,5 @@
 use hey_listen::{
-    sync::{ParallelDispatcher, ParallelDispatcherRequest, ParallelListener},
+    sync::{ParallelDispatcher, ParallelDispatchResult, ParallelListener},
     Mutex, RwLock,
 };
 use std::sync::Arc;
@@ -18,7 +18,7 @@ fn dispatch_parallel_to_dyn_traits() {
     }
 
     impl ParallelListener<Event> for Mutex<CountingEventListener> {
-        fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+        fn on_event(&self, _event: &Event) -> Option<ParallelDispatchResult> {
             self.lock().dispatch_counter += 1;
 
             None
@@ -26,7 +26,7 @@ fn dispatch_parallel_to_dyn_traits() {
     }
 
     impl ParallelListener<Event> for Arc<RwLock<CountingEventListener>> {
-        fn on_event(&self, _event: &Event) -> Option<ParallelDispatcherRequest> {
+        fn on_event(&self, _event: &Event) -> Option<ParallelDispatchResult> {
             self.write().dispatch_counter += 1;
 
             None
@@ -63,6 +63,6 @@ fn dispatch_parallel_to_dyn_traits() {
 
 #[test]
 fn is_send_and_sync() {
-    fn assert_send<T: Send + Sync>(_: &T) {};
+    fn assert_send<T: Send + Sync>(_: &T) {}
     assert_send(&ParallelDispatcher::<Event>::new(0).unwrap());
 }

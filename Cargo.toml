@@ -1,10 +1,10 @@
 [package]
 name = "hey_listen"
-version = "0.4.0"
+version = "0.5.0"
 license = "ISC"
-keywords = ["event", "dispatcher", "listener", "emitter", "parallel"]
+keywords = ["async" ,"event", "dispatcher", "listener", "emitter", "parallel"]
 categories = ["concurrency"]
-description = "An event-dispatcher-collection offering sync, parallel, and prioritised solutions!"
+description = "An event-dispatcher-collection offering async, sync, parallel, and prioritised solutions!"
 readme = "README.md"
 documentation = "https://docs.rs/hey_listen"
 repository = "https://github.com/lakelezz/hey_listen.git"
@@ -13,12 +13,31 @@ build = "build.rs"
 edition = "2018"
 
 [dependencies]
-rayon = "1.0"
-failure = "0.1"
-failure_derive = "0.1"
+
+[dependencies.rayon]
+version = "1"
+default-features = true
+optional = true
 
 [dependencies.parking_lot]
-version = "0.8"
+version = "0.11"
+default-features = true
+optional = true
+
+[dependencies.async-trait]
+version = "0.1"
+default-features = true
+optional = true
+
+[dependencies.futures]
+version = "0.3"
+optional = true
+
+[dependencies.tokio]
+version = "1"
+default-features = false
+features = ["rt", "macros"]
+optional = true
 
 [build-dependencies]
 skeptic = "0.13"
@@ -26,3 +45,14 @@ skeptic = "0.13"
 [dev-dependencies]
 skeptic = "0.13"
 
+[features]
+default = ["async", "parallel"]
+# Provides a Tokio-driven dispatcher.
+async = ["tokio", "futures", "async-trait", "parking_lot"]
+# Provides a Rayon-driven dispatcher.
+parallel = ["rayon", "parking_lot"]
+# Provides a local-Thread-driven dispatcher.
+blocking = []
+
+[package.metadata.docs.rs]
+all-features = true

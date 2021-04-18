@@ -11,11 +11,7 @@
 //! While most types need to implement the `Listener`-trait,
 //! closures can also become a listener.
 
-use hey_listen::{
-    rc::{Dispatcher, Listener, SyncDispatcherRequest},
-    RwLock,
-};
-use std::rc::Rc;
+use hey_listen::rc::{Dispatcher, Listener, DispatcherRequest};
 
 // This is our event-enum, it will represent possible events
 // a single event-dispatcher can dispatch.
@@ -32,47 +28,51 @@ struct ListenerStruct {}
 // This implements the `Listener`-trait, enabling the struct above (`ListenerStruct`)
 // to become a trait-object when starting listening.
 impl Listener<EventEnum> for ListenerStruct {
-    fn on_event(&mut self, _event: &EventEnum) -> Option<SyncDispatcherRequest> {
+    fn on_event(&self, _event: &EventEnum) -> Option<DispatcherRequest> {
         println!("I'm listening! :)");
 
-        // At the end, we have to return an `Option<SyncDispatcherRequest>` request back to
+        // At the end, we have to return an `Option<DispatcherRequest>` request back to
         // the dispatcher.
         // This request gives an instruction back to the dispatcher, here are the variants:
         //
-        // - `SyncDispatcherRequest::StopListening` to automatically
+        // - `DispatcherRequest::StopListening` to automatically
         // stop listening.
         //
-        // - `SyncDispatcherRequest::StopPropagation` stops the dispatcher from dispatching
+        // - `DispatcherRequest::StopPropagation` stops the dispatcher from dispatching
         // to other listeners in this instance of dispatching.
         //
-        // - `SyncDispatcherRequest::StopListeningAndPropagation` combines the first and second.
+        // - `DispatcherRequest::StopListeningAndPropagation` combines the first and second.
         //
         // - `None`, equals to sending no request to the dispatcher, everything will stay as it is.
         None
     }
 }
 
+impl Listener<EventEnum> for Box<dyn Fn(&EventEnum) -> Option<DispatcherRequest>> {
+    fn on_event(&self, event: &EventEnum) -> Option<DispatcherRequest> {
+        (self)(&event)
+    }
+}
+
+
 fn main() {
     // Create your listener.
-    let listener = Rc::new(RwLock::new(ListenerStruct {}));
+    let listener = ListenerStruct {};
 
     // Create your dispatcher and define the generic type what the dispatcher
     // shall accept as dispatchable type, it's our declared `EventEnum` in this
     // example.
-    let mut dispatcher: Dispatcher<EventEnum> = Dispatcher::default();
+    let mut dispatcher: Dispatcher<EventEnum> = Dispatcher::new();
 
     // Make your listener start listening.
-    dispatcher.add_listener(EventEnum::EventVariantA, &listener);
-
-    // Listeners can listen to multiple variants at once:
-    dispatcher.add_listener(EventEnum::EventVariantB, &listener);
+    dispatcher.add_listener(EventEnum::EventVariantA, listener);
 
     // Dispatches our events to all listeners.
     dispatcher.dispatch_event(&EventEnum::EventVariantA);
     dispatcher.dispatch_event(&EventEnum::EventVariantB);
 
     // If you want to work with a closure, you can do the following:
-    let listening_closure = Box::new(move |event: &EventEnum| {
+    let listening_closure: Box<dyn Fn(&EventEnum) -> Option<DispatcherRequest>> = Box::new(move |event: &EventEnum| {
         // Be aware, since enum's variants are no types,
         // whenever you want to work with the enum,
         // you need to pattern-match it of if-let-bind in order to find its variant,
@@ -89,10 +89,7 @@ fn main() {
         None
     });
 
-    // Closures require the `add_fn`-method instead `add_listener`.
-    dispatcher.add_fn(EventEnum::EventVariantC, listening_closure);
+    dispatcher.add_listener(EventEnum::EventVariantB, listening_closure);
 
-    // Nonetheless, you can trigger them with the same `dispatch_event`-method
-    // as used for trait objects.
     dispatcher.dispatch_event(&EventEnum::EventVariantC);
 }
