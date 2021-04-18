@@ -1,4 +1,4 @@
-use super::{super::{Error, Mutex}, AsyncDispatchResult, AsyncListener};
+use super::{super::Mutex, AsyncDispatchResult, AsyncListener};
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::{collections::HashMap, hash::Hash};
 
@@ -17,10 +17,10 @@ where
 {
     /// Create a new async dispatcher.
     /// Amount of threads must be set via Tokio.
-    pub fn new() -> Result<Self, Error> {
-        Ok(Self {
+    pub fn new() -> Self {
+        Self {
             events: HashMap::new(),
-        })
+        }
     }
 
     /// Adds a [`AsyncListener`] to listen for an `event_key`.
@@ -55,8 +55,7 @@ where
     ///
     ///
     /// let listener = Arc::new(RwLock::new(ListenerStruct {}));
-    /// let mut dispatcher: AsyncDispatcher<Event> = AsyncDispatcher::new()
-    ///     .expect("Failed to build threadpool");
+    /// let mut dispatcher: AsyncDispatcher<Event> = AsyncDispatcher::new();
     ///
     /// dispatcher.add_listener(Event::EventType, Arc::clone(&listener));
     /// ```
