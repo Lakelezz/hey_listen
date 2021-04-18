@@ -56,13 +56,13 @@ hey_listen = "0.4"
 ```
 
 [ci-badge]: https://img.shields.io/github/workflow/status/Lakelezz/hey_listen/CI?style=flat-square
-[ci]: https://dev.azure.com/lakeware/hey_listen/_build?definitionId=7
+[ci]: https://github.com/Lakelezz/hey_listen/actions
 
 [docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square&colorB=32b6b7
 [docs]: https://docs.rs/hey_listen
 
-[rust version badge]: https://img.shields.io/badge/rust-1.34.1+-93450a.svg?style=flat-square&colorB=ff9a0d
-[rust version link]: https://blog.rust-lang.org/2019/04/25/Rust-1.34.1.html
+[rust version badge]: https://img.shields.io/badge/rust-1.51+-93450a.svg?style=flat-square&colorB=ff9a0d
+[rust version link]: hhttps://blog.rust-lang.org/2021/03/25/Rust-1.51.0.html
 
 [crates.io link]: https://crates.io/crates/hey_listen
 [crates.io version]: https://img.shields.io/crates/v/hey_listen.svg?style=flat-square&colorB=b73732
