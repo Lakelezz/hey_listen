@@ -69,6 +69,6 @@ jobs:
 
       - name: Test All Features
       # TODO: Skeptic fails testing the README.md on 'nightly' for an unknown reason.
-        if: runner.toolchain != stable
+        if: ${{ matrix.os != 'nightly }}
         run: |
           cargo test --all-features
