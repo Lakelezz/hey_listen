@@ -142,9 +142,8 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
-<span id="142">142</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="kw">super</span>::{<span class="ident">Error</span>, <span class="ident">Mutex</span>}, <span class="ident">AsyncDispatchResult</span>, <span class="ident">AsyncListener</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="kw">super</span><span class="ident">::Mutex</span>, <span class="ident">AsyncDispatchResult</span>, <span class="ident">AsyncListener</span>};
 <span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">StreamExt</span>, <span class="ident">stream::FuturesUnordered</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">hash::Hash</span>};
 
@@ -163,10 +162,10 @@
 {
     <span class="doccomment">/// Create a new async dispatcher.</span>
     <span class="doccomment">/// Amount of threads must be set via Tokio.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">events</span>: <span class="ident">HashMap::new</span>(),
-        })
+        }
     }
 
     <span class="doccomment">/// Adds a [`AsyncListener`] to listen for an `event_key`.</span>
@@ -201,8 +200,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// let listener = Arc::new(RwLock::new(ListenerStruct {}));</span>
-    <span class="doccomment">/// let mut dispatcher: AsyncDispatcher&lt;Event&gt; = AsyncDispatcher::new()</span>
-    <span class="doccomment">///     .expect(&quot;Failed to build threadpool&quot;);</span>
+    <span class="doccomment">/// let mut dispatcher: AsyncDispatcher&lt;Event&gt; = AsyncDispatcher::new();</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// dispatcher.add_listener(Event::EventType, Arc::clone(&amp;listener));</span>
     <span class="doccomment">/// ```</span>
