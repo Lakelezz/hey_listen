@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PriorityDispatcher","In charge of prioritised sync dispatching to all listeners. Opposed to `EventListener`, this structure utilises one `BTreeMap` per event-type to order listeners by a given priority-level."]]});
