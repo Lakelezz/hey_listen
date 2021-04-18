@@ -151,13 +151,10 @@
 <span id="148">148</span>
 <span id="149">149</span>
 <span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="kw">super</span><span class="ident">::Mutex</span>, <span class="ident">AsyncDispatchResult</span>, <span class="ident">AsyncListener</span>};
-<span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">StreamExt</span>, <span class="ident">stream::FuturesUnordered</span>};
+<span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">stream::FuturesUnordered</span>, <span class="ident">StreamExt</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">hash::Hash</span>};
-
 
 <span class="doccomment">/// In charge of parallel dispatching to all listeners.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AsyncDispatcher</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -171,7 +168,6 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-
     <span class="doccomment">/// Create a new async dispatcher.</span>
     <span class="doccomment">/// Amount of threads must be set via Tokio.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
@@ -274,22 +270,22 @@
             <span class="kw">let</span> <span class="ident">unordered_fut</span>: <span class="ident">FuturesUnordered</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FuturesUnordered::new</span>();
 
             <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">listener</span>) <span class="kw">in</span> <span class="ident">listeners</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
-                    (<span class="ident">id</span>, <span class="ident">listener</span>.<span class="ident">on_event</span>(<span class="ident">event_identifier</span>).<span class="kw">await</span>)
-                };
+                <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> { (<span class="ident">id</span>, <span class="ident">listener</span>.<span class="ident">on_event</span>(<span class="ident">event_identifier</span>).<span class="kw">await</span>) };
 
                 <span class="ident">unordered_fut</span>.<span class="ident">push</span>(<span class="ident">item</span>);
             }
 
             <span class="kw">let</span> <span class="ident">listeners_to_remove</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="ident">::new</span>());
 
-            <span class="ident">unordered_fut</span>.<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AsyncDispatchResult::StopListening</span>) <span class="op">=</span> <span class="ident">v</span>.<span class="number">1</span> {
-                    <span class="ident">listeners_to_remove</span>.<span class="ident">lock</span>().<span class="ident">push</span>(<span class="ident">v</span>.<span class="number">0</span>);
-                }
+            <span class="ident">unordered_fut</span>
+                .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">AsyncDispatchResult::StopListening</span>) <span class="op">=</span> <span class="ident">v</span>.<span class="number">1</span> {
+                        <span class="ident">listeners_to_remove</span>.<span class="ident">lock</span>().<span class="ident">push</span>(<span class="ident">v</span>.<span class="number">0</span>);
+                    }
 
-                <span class="ident">futures::future::ready</span>(())
-            }).<span class="kw">await</span>;
+                    <span class="ident">futures::future::ready</span>(())
+                })
+                .<span class="kw">await</span>;
 
             <span class="ident">listeners_to_remove</span>.<span class="ident">lock</span>().<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
                 <span class="ident">listeners</span>.<span class="ident">swap_remove</span>(<span class="kw-2">*</span><span class="ident">index</span>);

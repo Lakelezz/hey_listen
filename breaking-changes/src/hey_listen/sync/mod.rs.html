@@ -252,22 +252,22 @@
 <span class="kw">use</span> <span class="ident">rayon::ThreadPool</span>;
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
+<span class="doccomment">/// This module contains the async dispatcher.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">async_dispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="doccomment">/// This module contains the parallel dispatcher.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parallel_dispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="doccomment">/// This module contains the priority dispatcher.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">priority_dispatcher</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
-<span class="doccomment">/// This module contains the async dispatcher.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">async_dispatcher</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">async_dispatcher::AsyncDispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">parallel_dispatcher::ParallelDispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">priority_dispatcher::PriorityDispatcher</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">async_dispatcher::AsyncDispatcher</span>;
 
 <span class="doccomment">/// An `enum` returning a request from a listener to its `sync` event-dispatcher.</span>
 <span class="doccomment">/// This `enum` is not restricted to dispatcher residing in the `sync`-module.</span>
