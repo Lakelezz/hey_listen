@@ -106,7 +106,9 @@ mod tests {
     mod execute_sync_dispatcher_requests {
         use super::*;
 
-        fn map_usize_to_request(x: &usize) -> Option<DispatcherRequest> {
+        /// This is used by the dispatcher and must be a `&T`.
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        const fn map_usize_to_request(x: &usize) -> Option<DispatcherRequest> {
             match *x {
                 0 => Some(DispatcherRequest::StopListening),
                 1 => Some(DispatcherRequest::StopPropagation),
