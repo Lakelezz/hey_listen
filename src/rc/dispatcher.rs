@@ -13,6 +13,7 @@ impl<T> Dispatcher<T>
 where
     T: PartialEq + Eq + Hash + Clone + Sized + 'static,
 {
+    /// Create a new blocking dispatcher.
     #[must_use]
     pub fn new() -> Self {
         Self {

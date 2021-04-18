@@ -1,7 +1,9 @@
 use std::hash::Hash;
 
+/// Contains the blocking dispatcher.
 pub mod dispatcher;
 
+/// Puts the blocking dispatcher in scope.
 pub use dispatcher::Dispatcher;
 
 /// Every event-receiver needs to implement this trait
