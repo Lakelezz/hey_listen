@@ -55,7 +55,7 @@ Add this to your `Cargo.toml`:
 hey_listen = "0.4"
 ```
 
-[ci-badge]: https://img.shields.io/azure-devops/build/lakeware/1942ff94-1b1e-4422-be98-1cd4696568d1/7/breaking-changes.svg?style=flat-square
+[ci-badge]: https://img.shields.io/github/workflow/status/Lakelezz/hey_listen/CI?style=flat-square
 [ci]: https://dev.azure.com/lakeware/hey_listen/_build?definitionId=7
 
 [docs-badge]: https://img.shields.io/badge/docs-online-5023dd.svg?style=flat-square&colorB=32b6b7
