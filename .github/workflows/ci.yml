@@ -55,11 +55,17 @@ jobs:
             target
           key: ${{ matrix.os }}-test-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: Build static
-        run: cargo build --features "static"
+      - name: Build "blocking" Feature
+        run: cargo build --no-default-features --features "blocking"
 
-      - name: Build dynamic
-        run: cargo build --features "dynamic"
+      - name: Build "parallel" Feature
+        run: cargo build --no-default-features --features "parallel"
+
+      - name: Build "async" Feature
+        run: cargo build --no-default-features --features "async"
+
+      - name: Build Default Features
+        run: cargo build
 
       - name: Test all features
         run: cargo test --all-features
