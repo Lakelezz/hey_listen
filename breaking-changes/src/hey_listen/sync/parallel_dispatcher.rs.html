@@ -158,6 +158,15 @@
 <span id="155">155</span>
 <span id="156">156</span>
 <span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{
     <span class="kw">super</span>::{<span class="ident">Error</span>, <span class="ident">Mutex</span>},
@@ -182,6 +191,10 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
+    <span class="doccomment">/// Creates a parallel dispatcher with `num_threads` amount of threads.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Errors</span>
+    <span class="doccomment">/// Fails with [`Error::ThreadPoolBuilder`] when building the fails.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">num_threads</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">events</span>: <span class="ident">HashMap::new</span>(),
@@ -252,9 +265,9 @@
     <span class="doccomment">/// impl Eq for Event {}</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`ParallelListener`]: trait.ParallelListener.html</span>
-    <span class="doccomment">/// [`Hash`]: https://doc.rust-lang.org/std/hash/trait.Hash.html</span>
-    <span class="doccomment">/// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html</span>
+    <span class="doccomment">/// [`ParallelListener`]: ParallelListener</span>
+    <span class="doccomment">/// [`Hash`]: std::hash::Hash</span>
+    <span class="doccomment">/// [`PartialEq`]: std::cmp::PartialEq</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_listener</span><span class="op">&lt;</span><span class="ident">D</span>: <span class="ident">ParallelListener</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">event_key</span>: <span class="ident">T</span>,
@@ -264,21 +277,26 @@
 
         <span class="self">self</span>.<span class="ident">events</span>
             .<span class="ident">entry</span>(<span class="ident">event_key</span>)
-            .<span class="ident">or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Vec::new</span>())
+            .<span class="ident">or_insert_with</span>(<span class="ident">Vec::new</span>)
             .<span class="ident">push</span>(<span class="ident">listener</span> <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span>(<span class="kw">dyn</span> <span class="ident">ParallelListener</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span>);
     }
 
     <span class="doccomment">/// Immediately after calling this method,</span>
     <span class="doccomment">/// the dispatcher will attempt to build a thread-pool with</span>
     <span class="doccomment">/// `num` amount of threads.</span>
-    <span class="doccomment">/// If internals fail to build, [`Error::ThreadPoolBuilder`] is returned.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// **Note**: Failing to build the thread-pool will result</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Errors</span>
+    <span class="doccomment">/// If internals fail to build, [`Error::ThreadPoolBuilder`] is returned.</span>
+    <span class="doccomment">/// Failing to build the thread-pool will result</span>
     <span class="doccomment">/// in keeping the prior thread-pool.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Error::ThreadPoolBuilder`]: enum.Error.html#variant.ThreadPoolBuilder</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Error::ThreadPoolBuilder`]: Error::ThreadPoolBuilder</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">num_threads</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">num</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">thread_pool</span> <span class="op">=</span> <span class="ident">ThreadPoolBuilder::new</span>().<span class="ident">num_threads</span>(<span class="ident">num</span>).<span class="ident">build</span>()<span class="question-mark">?</span>)
+        <span class="self">self</span>.<span class="ident">thread_pool</span> <span class="op">=</span> <span class="ident">ThreadPoolBuilder::new</span>().<span class="ident">num_threads</span>(<span class="ident">num</span>).<span class="ident">build</span>()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// All [`ParallelListener`]s listening to a passed `event_identifier`</span>
@@ -287,10 +305,10 @@
     <span class="doccomment">/// with `ParallelDispatchResult::StopListening` will cause them</span>
     <span class="doccomment">/// to be removed from the event-dispatcher.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`ParallelListener`]: trait.ParallelListener.html</span>
-    <span class="doccomment">/// [`on_event`]: trait.ParallelListener.html#tymethod.on_event</span>
-    <span class="doccomment">/// [`ParallelDispatchResult`]: enum.ParallelDispatchResult.html</span>
-    <span class="doccomment">/// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html</span>
+    <span class="doccomment">/// [`ParallelListener`]: ParallelListener</span>
+    <span class="doccomment">/// [`on_event`]: ParallelListener::on_event</span>
+    <span class="doccomment">/// [`ParallelDispatchResult`]: ParallelDispatchResult</span>
+    <span class="doccomment">/// [`Option`]: std::option::Option</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dispatch_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event_identifier</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">listener_collection</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">get_mut</span>(<span class="ident">event_identifier</span>) {
             <span class="kw">let</span> <span class="ident">listeners_to_remove</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>());

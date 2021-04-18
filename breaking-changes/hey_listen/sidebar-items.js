@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error","`hey_listen`’s Error collection. As long as there are no other errors, keep it locked away."]],"mod":[["sync",""]],"type":[["Mutex","A mutual exclusion primitive useful for protecting shared data"],["RwLock","A reader-writer lock"]]});
+initSidebarItems({"enum":[["Error","`hey_listen`’s Error collection. As long as there are no other errors, keep it locked away."]],"mod":[["sync","The parallel/async dispatcher module."]],"type":[["Mutex","A mutual exclusion primitive useful for protecting shared data"],["RwLock","A reader-writer lock"]]});

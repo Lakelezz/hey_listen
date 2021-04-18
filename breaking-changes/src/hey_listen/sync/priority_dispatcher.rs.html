@@ -218,8 +218,8 @@
     <span class="ident">P</span>: <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">T</span>: <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PriorityDispatcher</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">PriorityDispatcher</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">events</span>: <span class="ident">PriorityListenerMap::new</span>(),
         }
     }
@@ -246,7 +246,7 @@
     <span class="doccomment">/// use std::sync::Arc;</span>
     <span class="doccomment">/// use hey_listen::{</span>
     <span class="doccomment">///    RwLock,</span>
-    <span class="doccomment">///    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherRequest},</span>
+    <span class="doccomment">///    sync::{PriorityListener, PriorityDispatcher, PriorityDispatcherResult},</span>
     <span class="doccomment">/// };</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// #[derive(Clone, Eq, Hash, PartialEq)]</span>
@@ -257,15 +257,15 @@
     <span class="doccomment">/// struct ListenerStruct;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// impl PriorityListener&lt;Event&gt; for ListenerStruct {</span>
-    <span class="doccomment">///     fn on_event(&amp;self, event: &amp;Event) -&gt; Option&lt;PriorityDispatcherRequest&gt; { None }</span>
+    <span class="doccomment">///     fn on_event(&amp;self, event: &amp;Event) -&gt; Option&lt;PriorityDispatcherResult&gt; { None }</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// fn main() {</span>
-    <span class="doccomment">///     let listener = ListenerStruct;</span>
-    <span class="doccomment">///     let mut dispatcher: PriorityDispatcher&lt;u32, Event&gt; = PriorityDispatcher::default();</span>
+    <span class="doccomment">/// let listener = ListenerStruct;</span>
+    <span class="doccomment">/// let mut dispatcher: PriorityDispatcher&lt;u32, Event&gt; = PriorityDispatcher::default();</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">///     dispatcher.add_listener(Event::EventType, listener, 1);</span>
-    <span class="doccomment">/// }</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// dispatcher.add_listener(Event::EventType, listener, 1);</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Declaring your own [`Hash`]- and [`PartialEq`]-trait to bypass</span>

@@ -74,6 +74,13 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! `Hey_listen` is a collection of event-dispatchers aiming to suit all needs!</span>
 <span class="doccomment">//!</span>
@@ -121,10 +128,17 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! [`examples`]: https://github.com/Lakelezz/hey_listen/tree/master/examples</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::all</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::pedantic</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::nursery</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::cargo</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;blocking&quot;</span>)]</span>
+<span class="doccomment">/// The blocking dispatcher module.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rc</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>))]</span>
+<span class="doccomment">/// The parallel/async dispatcher module.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sync</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>))]</span>

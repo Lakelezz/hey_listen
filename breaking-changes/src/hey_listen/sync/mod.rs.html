@@ -234,16 +234,32 @@
 <span id="231">231</span>
 <span id="232">232</span>
 <span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rayon::ThreadPool</span>;
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
+<span class="doccomment">/// This module contains the parallel dispatcher.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parallel_dispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
+<span class="doccomment">/// This module contains the priority dispatcher.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">priority_dispatcher</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
+<span class="doccomment">/// This module contains the async dispatcher.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">async_dispatcher</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
@@ -266,9 +282,17 @@
 <span class="doccomment">/// and then `StopPropagation`.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PriorityDispatcherRequest</span> {
+<span class="comment">// Clippy complains that all variants have the same prefix.</span>
+<span class="comment">// However, the term `Stop` is an essential component for the meaning of each</span>
+<span class="comment">// variant&#39;s name.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::pub_enum_variant_names</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PriorityDispatcherResult</span> {
+    <span class="doccomment">/// Stops listening to the dispatcher.</span>
     <span class="ident">StopListening</span>,
+    <span class="doccomment">/// Prevents the event from reaching the next less important priority group.</span>
     <span class="ident">StopPropagation</span>,
+    <span class="doccomment">/// Stops listening and prevents events from reaching the next less</span>
+    <span class="doccomment">/// priority group.</span>
     <span class="ident">StopListeningAndPropagation</span>,
 }
 
@@ -321,7 +345,7 @@
     <span class="kw-2">mut</span> <span class="ident">function</span>: <span class="ident">F</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ExecuteRequestsResult</span>
 <span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherRequest</span><span class="op">&gt;</span>,
+    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherResult</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
 
@@ -329,13 +353,13 @@
         <span class="kw">if</span> <span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">vec</span>.<span class="ident">len</span>() {
             <span class="kw">match</span> <span class="ident">function</span>(<span class="kw-2">&amp;</span><span class="ident">vec</span>[<span class="ident">index</span>]) {
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>,
-                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopListening</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopListening</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">vec</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>);
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopPropagation</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopPropagation</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">return</span> <span class="ident">ExecuteRequestsResult::Stopped</span>
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopListeningAndPropagation</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopListeningAndPropagation</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">vec</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>);
                     <span class="kw">return</span> <span class="ident">ExecuteRequestsResult::Stopped</span>;
                 }
@@ -354,11 +378,11 @@
     <span class="kw">mod</span> <span class="ident">execute_sync_dispatcher_requests</span> {
         <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-        <span class="kw">fn</span> <span class="ident">map_usize_to_request</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherRequest</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">map_usize_to_request</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherResult</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">x</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopListening</span>),
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopPropagation</span>),
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherRequest::StopListeningAndPropagation</span>),
+                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopListening</span>),
+                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopPropagation</span>),
+                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PriorityDispatcherResult::StopListeningAndPropagation</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             }
         }
@@ -404,12 +428,13 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// **Note**:</span>
 <span class="doccomment">/// Opposed to `ParallelDispatchResult` a [`Listener`] cannot</span>
-<span class="doccomment">/// stop propagation as the propagation is happening parallel.</span>
+<span class="doccomment">/// stop propagation as the propagation is happening in parallel.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Listener`]: trait.Listener.html</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ParallelDispatchResult</span> {
+    <span class="doccomment">/// Stops the listener from receiving further events from the dispatcher.</span>
     <span class="ident">StopListening</span>,
 }
 
@@ -420,6 +445,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;async&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AsyncDispatchResult</span> {
+    <span class="doccomment">/// Stops the listener from receiving further events from the dispatcher.</span>
     <span class="ident">StopListening</span>,
 }
 
@@ -435,7 +461,7 @@
     <span class="doccomment">/// This function will be called once a listened</span>
     <span class="doccomment">/// event-type `T` has been dispatched.</span>
     <span class="doccomment">/// If you want to mutate the listener, consider wrapping it behind an</span>
-    <span class="doccomment">/// RwLock or Mutex.</span>
+    <span class="doccomment">/// `RwLock` or `Mutex`.</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AsyncDispatchResult</span><span class="op">&gt;</span>;
 }
 
@@ -450,7 +476,7 @@
     <span class="doccomment">/// This function will be called once a listened</span>
     <span class="doccomment">/// event-type `T` has been dispatched.</span>
     <span class="doccomment">/// If you want to mutate the listener, consider wrapping it behind an</span>
-    <span class="doccomment">/// RwLock or Mutex.</span>
+    <span class="doccomment">/// `RwLock` or `Mutex`.</span>
     <span class="kw">fn</span> <span class="ident">on_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ParallelDispatchResult</span><span class="op">&gt;</span>;
 }
 
@@ -465,8 +491,8 @@
     <span class="doccomment">/// This function will be called once a listened</span>
     <span class="doccomment">/// event-type `T` has been dispatched.</span>
     <span class="doccomment">/// If you want to mutate the listener, consider wrapping it behind an</span>
-    <span class="doccomment">/// RwLock or Mutex.</span>
-    <span class="kw">fn</span> <span class="ident">on_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherRequest</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// `RwLock` or `Mutex`.</span>
+    <span class="kw">fn</span> <span class="ident">on_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PriorityDispatcherResult</span><span class="op">&gt;</span>;
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hey_listen" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
