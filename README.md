@@ -52,7 +52,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hey_listen = "0.4"
+hey_listen = "0.5"
 ```
 
 [ci-badge]: https://img.shields.io/github/workflow/status/Lakelezz/hey_listen/CI?style=flat-square
