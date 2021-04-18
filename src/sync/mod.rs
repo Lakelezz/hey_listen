@@ -128,7 +128,9 @@ mod tests {
     mod execute_sync_dispatcher_requests {
         use super::*;
 
-        fn map_usize_to_request(x: &usize) -> Option<PriorityDispatcherResult> {
+        /// This is used by the dispatcher and must be a `&T`.
+        #[allow(clippy::trivially_copy_pass_by_ref)]
+        const fn map_usize_to_request(x: &usize) -> Option<PriorityDispatcherResult> {
             match *x {
                 0 => Some(PriorityDispatcherResult::StopListening),
                 1 => Some(PriorityDispatcherResult::StopPropagation),
